@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body>
+<div th:replace="~{fragments/layout :: sidebar('register')}"></div>
+<div class="main">
+    <div class="page-title">등록</div>
+
+    <div th:if="${#strings.equals(param.success, 'app')}"     style="background:#dcfce7;color:#166534;padding:12px 16px;border-radius:6px;margin-bottom:16px;">애플리케이션이 등록되었습니다.</div>
+    <div th:if="${#strings.equals(param.success, 'manager')}" style="background:#dcfce7;color:#166534;padding:12px 16px;border-radius:6px;margin-bottom:16px;">매니저가 등록되었습니다.</div>
+    <div th:if="${#strings.equals(param.success, 'apikey')}"  style="background:#fef9c3;color:#854d0e;padding:12px 16px;border-radius:6px;margin-bottom:16px;">
+        API 키가 생성되었습니다. 이 키는 다시 확인할 수 없으니 복사해두세요.<br>
+        <strong style="font-family:monospace;font-size:15px;" th:text="${param.key}"></strong>
+    </div>
+
+    <!-- 사용자(토큰) 등록 -->
+    <div class="card">
+        <h2>사용자 등록</h2>
+        <form th:action="@{/dashboard/register/token}" method="post">
+            <div class="form-row">
+                <div>
+                    <label for="appId">애플리케이션</label>
+                    <select id="appId" name="appId" required style="min-width:200px;">
+                        <option value="" disabled selected>앱 선택</option>
+                        <option th:each="app : ${apps}" th:value="${app.id}" th:text="${app.name}"></option>
+                    </select>
+                </div>
+                <div>
+                    <label for="expireDate">만료일</label>
+                    <input type="date" id="expireDate" name="expireDate" required style="min-width:160px;">
+                </div>
+                <button type="submit">토큰 생성</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 애플리케이션 등록 -->
+    <div class="card">
+        <h2>애플리케이션 등록</h2>
+        <form th:action="@{/dashboard/register/app}" method="post">
+            <div class="form-row">
+                <div>
+                    <label for="appName">앱 이름</label>
+                    <input type="text" id="appName" name="name" required style="min-width:180px;">
+                </div>
+                <div>
+                    <label for="appDescription">설명</label>
+                    <input type="text" id="appDescription" name="description" placeholder="선택 입력" style="min-width:220px;">
+                </div>
+                <button type="submit">앱 등록</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- API Key 관리 -->
+    <div class="card">
+        <h2>API Key 관리</h2>
+        <form th:action="@{/dashboard/register/apikey}" method="post" style="margin-bottom:16px;">
+            <div class="form-row">
+                <div>
+                    <label for="apiKeyDesc">설명</label>
+                    <input type="text" id="apiKeyDesc" name="description" placeholder="예) 자동화 스크립트" required style="min-width:240px;">
+                </div>
+                <button type="submit">키 생성</button>
+            </div>
+        </form>
+        <table>
+            <thead>
+                <tr><th>ID</th><th>설명</th><th>생성일시</th><th>관리</th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="key : ${apiKeys}">
+                    <td th:text="${key.id}"></td>
+                    <td th:text="${key.description}"></td>
+                    <td th:text="${#temporals.format(key.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+                    <td>
+                        <form th:action="@{/dashboard/apikeys/{id}/delete(id=${key.id})}" method="post" style="display:inline;"
+                              onsubmit="return confirm('삭제하시겠습니까?')">
+                            <button type="submit" style="padding:4px 10px;background:#ef4444;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer;">삭제</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(apiKeys)}">
+                    <td colspan="4" style="text-align:center;color:#94a3b8;padding:16px;">생성된 API Key가 없습니다.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 매니저 등록 -->
+    <div class="card">
+        <h2>매니저 등록</h2>
+        <form th:action="@{/dashboard/register/manager}" method="post">
+            <div class="form-row">
+                <div>
+                    <label for="username">아이디</label>
+                    <input type="text" id="username" name="username" required style="min-width:160px;">
+                </div>
+                <div>
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" required style="min-width:160px;">
+                </div>
+                <button type="submit">매니저 등록</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

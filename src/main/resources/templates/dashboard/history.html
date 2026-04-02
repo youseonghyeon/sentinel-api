@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body>
+<div th:replace="~{fragments/layout :: sidebar('history')}"></div>
+<div class="main">
+    <div class="page-title">사용자 히스토리</div>
+
+    <!-- 차트 영역 -->
+    <div style="display:flex; gap:24px; margin-bottom:24px;">
+        <div class="card" style="flex:1; min-width:0;">
+            <h2>서비스별 접근 횟수</h2>
+            <canvas id="appChart" height="200"></canvas>
+        </div>
+        <div class="card" style="flex:2; min-width:0;">
+            <h2>날짜별 접근 수</h2>
+            <canvas id="dailyChart" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- 목록 -->
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>일시</th>
+                    <th>애플리케이션</th>
+                    <th>토큰</th>
+                    <th>IP</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="h : ${histories}">
+                    <td th:text="${h.id}"></td>
+                    <td th:text="${#temporals.format(h.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                    <td th:text="${appNames[h.appId] ?: h.appId}"></td>
+                    <td th:text="${h.token}"></td>
+                    <td th:text="${h.ip}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(histories)}">
+                    <td colspan="5" style="text-align:center; color:#94a3b8; padding: 24px;">히스토리가 없습니다.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+    const appLabels  = /*[[${appAccessCounts.keySet()}]]*/ [];
+    const appData    = /*[[${appAccessCounts.values()}]]*/ [];
+    const dailyLabels = /*[[${dailyCounts.keySet()}]]*/ [];
+    const dailyData   = /*[[${dailyCounts.values()}]]*/ [];
+
+    const COLORS = ['#2563eb','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#db2777'];
+
+    new Chart(document.getElementById('appChart'), {
+        type: 'doughnut',
+        data: {
+            labels: appLabels,
+            datasets: [{
+                data: appData,
+                backgroundColor: COLORS.slice(0, appLabels.length),
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            plugins: { legend: { position: 'bottom' } },
+            maintainAspectRatio: true,
+        }
+    });
+
+    new Chart(document.getElementById('dailyChart'), {
+        type: 'bar',
+        data: {
+            labels: dailyLabels,
+            datasets: [{
+                label: '접근 수',
+                data: dailyData,
+                backgroundColor: '#2563eb',
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            },
+            plugins: { legend: { display: false } },
+            maintainAspectRatio: true,
+        }
+    });
+</script>
+</body>
+</html>

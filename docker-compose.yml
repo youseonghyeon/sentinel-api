@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sentinel-postgres
+    environment:
+      POSTGRES_DB: sentinel
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: sentinel
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: sentinel-redis
+    command: redis-server --requirepass sentinel
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "sentinel", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+#  app:
+#    build: .
+#    container_name: sentinel-app
+#    profiles: ["full"]   # docker compose --profile full up 으로만 실행
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#    volumes:
+#      - ./public.pem:/keys/public.pem:ro
+#      - ./private.pem:/keys/private.pem:ro
+#    environment:
+#      DB_URL: jdbc:postgresql://postgres:5432/sentinel
+#      DB_USERNAME: sentinel
+#      DB_PASSWORD: sentinel
+#      REDIS_HOST: redis
+#      REDIS_PORT: 6379
+#      REDIS_PASSWORD: sentinel
+#      JPA_DDL_AUTO: validate
+#      JWT_PUBLIC_KEY: "file:/keys/public.pem"
+#      JWT_PRIVATE_KEY: "file:/keys/private.pem"
+#      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:}
+#      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:}
+#      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID:}
+#      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET:}
+#      APPLE_TEAM_ID: ${APPLE_TEAM_ID:}
+#      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:}
+#      APPLE_KEY_ID: ${APPLE_KEY_ID:}
+#      APPLE_PRIVATE_KEY: ${APPLE_PRIVATE_KEY:}
+#    ports:
+#      - "8080:8080"
+
+volumes:
+  postgres_data:
+  redis_data:
