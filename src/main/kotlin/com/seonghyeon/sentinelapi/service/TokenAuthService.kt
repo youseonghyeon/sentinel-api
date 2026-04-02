@@ -8,7 +8,7 @@ import com.seonghyeon.sentinelapi.repository.TokenRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDate
-import java.util.UUID
+import java.util.*
 
 @Service
 class TokenAuthService(
@@ -17,7 +17,7 @@ class TokenAuthService(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun check(tokenStr: String, clientId: Long) {
+    fun check(tokenStr: String, clientId: Long): Token {
         log.info("Token check: token={}, clientId={}", tokenStr, clientId)
         val token = tokenRepository.findByTokenStrAndApplicationId(tokenStr, clientId)
             ?: run {
@@ -31,6 +31,7 @@ class TokenAuthService(
         }
 
         log.info("Token valid: token={}, clientId={}", tokenStr, clientId)
+        return token
     }
 
     fun generate(appId: Long, expireDate: LocalDate): Token {

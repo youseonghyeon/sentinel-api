@@ -1,5 +1,6 @@
 package com.seonghyeon.sentinelapi.controller.auth
 
+import com.seonghyeon.sentinelapi.controller.auth.dto.UserLoginResponse
 import com.seonghyeon.sentinelapi.domain.LoginHistory
 import com.seonghyeon.sentinelapi.repository.LoginHistoryRepository
 import com.seonghyeon.sentinelapi.service.ApplicationService
@@ -22,13 +23,14 @@ class UserController(
         @RequestHeader("X-Client-Id") appId: String,
         @RequestParam("token") token: String,
         request: HttpServletRequest,
-    ): ResponseEntity<Void> {
+    ): ResponseEntity<UserLoginResponse> {
         val clientId = applicationService.resolveClientId(appId)
-        tokenAuthService.check(token, clientId)
+        val t = tokenAuthService.check(token, clientId)
         loginHistoryRepository.save(
             LoginHistory(id = 0, token = token, appId = appId, ip = request.remoteAddr, createdAt = LocalDateTime.now())
         )
-        return ResponseEntity.ok().build()
+
+        return ResponseEntity.ok(UserLoginResponse.from(t))
     }
 
     @PostMapping("/check/token")
