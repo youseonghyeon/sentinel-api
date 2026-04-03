@@ -15,6 +15,22 @@
 <div class="main">
     <div class="page-title">사용자 관리</div>
     <div class="alert-success" th:if="${param.success == 'token'}" style="background:#dcfce7;color:#166534;padding:12px 16px;border-radius:6px;margin-bottom:16px;">토큰이 생성되었습니다.</div>
+    <div class="card" style="padding:16px 24px;">
+        <form th:action="@{/dashboard/users}" method="get">
+            <div class="form-row">
+                <div>
+                    <label for="appName">애플리케이션</label>
+                    <input type="text" id="appName" name="appName" placeholder="앱 이름 검색" th:value="${appName}">
+                </div>
+                <div>
+                    <label for="tokenStr">토큰</label>
+                    <input type="text" id="tokenStr" name="tokenStr" placeholder="토큰 검색" th:value="${tokenStr}">
+                </div>
+                <button type="submit">검색</button>
+                <a th:href="@{/dashboard/users}" style="padding:11px 16px;font-size:14px;color:#64748b;text-decoration:none;">초기화</a>
+            </div>
+        </form>
+    </div>
     <div class="card">
         <table>
             <thead>

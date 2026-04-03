@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "sentinel.fullname" . }}
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  tls:
+    - hosts:
+        - sentinel.seonghyeon.site
+      secretName: sentinel-tls
+  rules:
+    - host: sentinel.seonghyeon.site
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "sentinel.fullname" . }}
+                port:
+                  number: 8080

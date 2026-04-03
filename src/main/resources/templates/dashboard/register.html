@@ -8,32 +8,6 @@
 
     <div th:if="${#strings.equals(param.success, 'app')}"     style="background:#dcfce7;color:#166534;padding:12px 16px;border-radius:6px;margin-bottom:16px;">애플리케이션이 등록되었습니다.</div>
     <div th:if="${#strings.equals(param.success, 'manager')}" style="background:#dcfce7;color:#166534;padding:12px 16px;border-radius:6px;margin-bottom:16px;">매니저가 등록되었습니다.</div>
-    <div th:if="${#strings.equals(param.success, 'apikey')}"  style="background:#fef9c3;color:#854d0e;padding:12px 16px;border-radius:6px;margin-bottom:16px;">
-        API 키가 생성되었습니다. 이 키는 다시 확인할 수 없으니 복사해두세요.<br>
-        <strong style="font-family:monospace;font-size:15px;" th:text="${param.key}"></strong>
-    </div>
-
-    <!-- 사용자(토큰) 등록 -->
-    <div class="card">
-        <h2>사용자 등록</h2>
-        <form th:action="@{/dashboard/register/token}" method="post">
-            <div class="form-row">
-                <div>
-                    <label for="appId">애플리케이션</label>
-                    <select id="appId" name="appId" required style="min-width:200px;">
-                        <option value="" disabled selected>앱 선택</option>
-                        <option th:each="app : ${apps}" th:value="${app.id}" th:text="${app.name}"></option>
-                    </select>
-                </div>
-                <div>
-                    <label for="expireDate">만료일</label>
-                    <input type="date" id="expireDate" name="expireDate" required style="min-width:160px;">
-                </div>
-                <button type="submit">토큰 생성</button>
-            </div>
-        </form>
-    </div>
-
     <!-- 애플리케이션 등록 -->
     <div class="card">
         <h2>애플리케이션 등록</h2>
@@ -52,39 +26,30 @@
         </form>
     </div>
 
-    <!-- API Key 관리 -->
+    <!-- 사용자(토큰) 등록 -->
     <div class="card">
-        <h2>API Key 관리</h2>
-        <form th:action="@{/dashboard/register/apikey}" method="post" style="margin-bottom:16px;">
+        <h2>사용자 등록</h2>
+        <form th:action="@{/dashboard/register/token}" method="post">
             <div class="form-row">
                 <div>
-                    <label for="apiKeyDesc">설명</label>
-                    <input type="text" id="apiKeyDesc" name="description" placeholder="예) 자동화 스크립트" required style="min-width:240px;">
+                    <label for="appId">애플리케이션</label>
+                    <select id="appId" name="appId" required style="min-width:160px;">
+                        <option value="" disabled selected>앱 선택</option>
+                        <option th:each="app : ${apps}" th:value="${app.id}" th:text="${app.name}"></option>
+                    </select>
                 </div>
-                <button type="submit">키 생성</button>
+                <div>
+                    <label for="expireDate">만료일</label>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                        <input type="date" id="expireDate" name="expireDate" required style="min-width:160px;">
+                        <button type="button" onclick="addMonths(1)" style="padding:6px 10px;font-size:12px;background:#f1f5f9;border:1px solid #ddd;border-radius:4px;cursor:pointer;">+1달</button>
+                        <button type="button" onclick="addMonths(2)" style="padding:6px 10px;font-size:12px;background:#f1f5f9;border:1px solid #ddd;border-radius:4px;cursor:pointer;">+2달</button>
+                        <button type="button" onclick="addMonths(3)" style="padding:6px 10px;font-size:12px;background:#f1f5f9;border:1px solid #ddd;border-radius:4px;cursor:pointer;">+3달</button>
+                    </div>
+                </div>
+                <button type="submit">토큰 생성</button>
             </div>
         </form>
-        <table>
-            <thead>
-                <tr><th>ID</th><th>설명</th><th>생성일시</th><th>관리</th></tr>
-            </thead>
-            <tbody>
-                <tr th:each="key : ${apiKeys}">
-                    <td th:text="${key.id}"></td>
-                    <td th:text="${key.description}"></td>
-                    <td th:text="${#temporals.format(key.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
-                    <td>
-                        <form th:action="@{/dashboard/apikeys/{id}/delete(id=${key.id})}" method="post" style="display:inline;"
-                              onsubmit="return confirm('삭제하시겠습니까?')">
-                            <button type="submit" style="padding:4px 10px;background:#ef4444;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer;">삭제</button>
-                        </form>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(apiKeys)}">
-                    <td colspan="4" style="text-align:center;color:#94a3b8;padding:16px;">생성된 API Key가 없습니다.</td>
-                </tr>
-            </tbody>
-        </table>
     </div>
 
     <!-- 매니저 등록 -->
@@ -105,5 +70,21 @@
         </form>
     </div>
 </div>
+<script>
+    function addMonths(n) {
+        const d = new Date();
+        d.setMonth(d.getMonth() + n);
+        d.setDate(d.getDate() + 1);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        document.getElementById('expireDate').value = `${yyyy}-${mm}-${dd}`;
+    }
+</script>
+<script th:if="${newToken != null}">
+    window.onload = function() {
+        alert('토큰이 생성되었습니다.\n\n애플리케이션: [[${newAppName}]]\n토큰: [[${newToken}]]\n만료일: [[${newExpireDate}]]');
+    };
+</script>
 </body>
 </html>

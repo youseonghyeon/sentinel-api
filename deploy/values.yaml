@@ -1,0 +1,50 @@
+replicaCount: 1
+
+image:
+  repository: "epfzja/sentinel-api"
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8080
+  actuatorPort: 8081
+
+secretName: sentinel-secret
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: actuator
+  initialDelaySeconds: 60
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: actuator
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+resources: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

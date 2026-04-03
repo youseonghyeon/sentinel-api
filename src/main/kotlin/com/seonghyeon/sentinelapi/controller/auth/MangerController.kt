@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.time.LocalDate
 
 @Controller
@@ -38,17 +39,26 @@ class MangerController(
     @GetMapping("/dashboard/register")
     fun registerPage(model: Model): String {
         model.addAttribute("apps", appRepository.findAll())
-        model.addAttribute("apiKeys", apiKeyService.findAll())
         return "dashboard/register"
+    }
+
+    @GetMapping("/dashboard/apikeys")
+    fun apiKeysPage(model: Model): String {
+        model.addAttribute("apiKeys", apiKeyService.findAll())
+        return "dashboard/apikeys"
     }
 
     @PostMapping("/dashboard/register/token")
     fun registerToken(
         @RequestParam appId: Long,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) expireDate: LocalDate,
+        redirectAttributes: RedirectAttributes,
     ): String {
-        tokenAuthService.generate(appId, expireDate)
-        return "redirect:/dashboard/users?success=token"
+        val token = tokenAuthService.generate(appId, expireDate)
+        redirectAttributes.addFlashAttribute("newToken", token.tokenStr)
+        redirectAttributes.addFlashAttribute("newAppName", token.application.name)
+        redirectAttributes.addFlashAttribute("newExpireDate", token.expireDate)
+        return "redirect:/dashboard/register"
     }
 
     @PostMapping("/dashboard/register/app")
@@ -72,8 +82,19 @@ class MangerController(
     // --- 사용자 관리 ---
 
     @GetMapping("/dashboard/users")
-    fun usersPage(model: Model): String {
-        model.addAttribute("tokens", tokenRepository.findAll())
+    fun usersPage(
+        @RequestParam(required = false) appName: String?,
+        @RequestParam(required = false) tokenStr: String?,
+        model: Model,
+    ): String {
+        val tokens = when {
+            !appName.isNullOrBlank() -> tokenRepository.findByApplication_NameContainingIgnoreCaseOrderByIdDesc(appName)
+            !tokenStr.isNullOrBlank() -> tokenRepository.findByTokenStrContainingIgnoreCaseOrderByIdDesc(tokenStr)
+            else -> tokenRepository.findAllByOrderByIdDesc()
+        }
+        model.addAttribute("tokens", tokens)
+        model.addAttribute("appName", appName.orEmpty())
+        model.addAttribute("tokenStr", tokenStr.orEmpty())
         return "dashboard/users"
     }
 
@@ -99,13 +120,13 @@ class MangerController(
     @PostMapping("/dashboard/register/apikey")
     fun generateApiKey(@RequestParam description: String): String {
         val apiKey = apiKeyService.generate(description)
-        return "redirect:/dashboard/register?success=apikey&key=${apiKey.keyStr}"
+        return "redirect:/dashboard/apikeys?success=apikey&key=${apiKey.keyStr}"
     }
 
     @PostMapping("/dashboard/apikeys/{id}/delete")
     fun deleteApiKey(@PathVariable id: Long): String {
         apiKeyService.delete(id)
-        return "redirect:/dashboard/register"
+        return "redirect:/dashboard/apikeys"
     }
 
     // --- 애플리케이션 관리 ---
