@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface AppRepository : JpaRepository<App, Long> {
     fun findByAppId(appId: String): App?
+    fun findByNameContainingIgnoreCase(name: String): List<App>
 }

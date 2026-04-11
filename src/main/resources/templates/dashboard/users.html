@@ -1,15 +1,22 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
-<head th:replace="~{fragments/layout :: head}">
+<head th:replace="~{fragments/layout :: head}"></head>
 <style>
     .action-form { display: inline; }
     .btn-delete { padding: 5px 12px; background: #ef4444; color: #fff; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
     .btn-delete:hover { background: #dc2626; }
     .btn-save { padding: 5px 12px; background: #2563eb; color: #fff; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
     .btn-save:hover { background: #1d4ed8; }
+    .btn-device { padding: 5px 12px; background: #7c3aed; color: #fff; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn-device:hover { background: #6d28d9; }
     input[type=date].inline { padding: 5px 8px; font-size: 13px; border: 1px solid #ddd; border-radius: 4px; }
+    input[type=number].inline { padding: 5px 8px; font-size: 13px; border: 1px solid #ddd; border-radius: 4px; width: 60px; }
+    .pagination { display:flex; gap:8px; align-items:center; justify-content:center; margin-top:20px; }
+    .pagination a, .pagination span { padding:6px 12px; border:1px solid #ddd; border-radius:4px; font-size:13px; text-decoration:none; color:#475569; }
+    .pagination a:hover { background:#f1f5f9; }
+    .pagination .current { background:#2563eb; color:#fff; border-color:#2563eb; }
+    .pagination .disabled { color:#cbd5e1; pointer-events:none; }
 </style>
-</head>
 <body>
 <div th:replace="~{fragments/layout :: sidebar('users')}"></div>
 <div class="main">
@@ -39,6 +46,7 @@
                     <th>애플리케이션</th>
                     <th>토큰</th>
                     <th>만료일</th>
+                    <th>최대 PC 수</th>
                     <th>상태</th>
                     <th>관리</th>
                 </tr>
@@ -56,10 +64,18 @@
                         </form>
                     </td>
                     <td>
+                        <form th:action="@{/dashboard/users/{id}/maxDevices(id=${token.id})}" method="post" class="action-form">
+                            <input type="number" name="maxDeviceCount" class="inline"
+                                   th:value="${token.maxDeviceCount}" min="0" required>
+                            <button type="submit" class="btn-save">저장</button>
+                        </form>
+                    </td>
+                    <td>
                         <span th:if="${token.expireDate.isBefore(#temporals.createToday())}" class="badge badge-expired">만료</span>
                         <span th:unless="${token.expireDate.isBefore(#temporals.createToday())}" class="badge badge-ok">유효</span>
                     </td>
-                    <td>
+                    <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <a th:href="@{/dashboard/users/{id}/devices(id=${token.id})}" class="btn-device">기기 관리</a>
                         <form th:action="@{/dashboard/users/{id}/delete(id=${token.id})}" method="post" class="action-form"
                               onsubmit="return confirm('삭제하시겠습니까?')">
                             <button type="submit" class="btn-delete">삭제</button>
@@ -67,10 +83,28 @@
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(tokens)}">
-                    <td colspan="6" style="text-align:center; color:#94a3b8; padding: 24px;">등록된 사용자가 없습니다.</td>
+                    <td colspan="7" style="text-align:center; color:#94a3b8; padding: 24px;">등록된 사용자가 없습니다.</td>
                 </tr>
             </tbody>
         </table>
+
+        <!-- 페이지네이션 -->
+        <div class="pagination" th:if="${totalPages > 1}">
+            <a th:if="${currentPage > 0}"
+               th:href="@{/dashboard/users(page=${currentPage - 1}, appName=${appName}, tokenStr=${tokenStr})}">이전</a>
+            <span th:if="${currentPage == 0}" class="disabled">이전</span>
+
+            <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                <span th:if="${i == currentPage}" class="current" th:text="${i + 1}"></span>
+                <a th:unless="${i == currentPage}"
+                   th:href="@{/dashboard/users(page=${i}, appName=${appName}, tokenStr=${tokenStr})}"
+                   th:text="${i + 1}"></a>
+            </th:block>
+
+            <a th:if="${currentPage < totalPages - 1}"
+               th:href="@{/dashboard/users(page=${currentPage + 1}, appName=${appName}, tokenStr=${tokenStr})}">다음</a>
+            <span th:if="${currentPage >= totalPages - 1}" class="disabled">다음</span>
+        </div>
     </div>
 </div>
 </body>

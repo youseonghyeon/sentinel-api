@@ -1,39 +1,57 @@
 package com.seonghyeon.sentinelapi.controller.auth
 
+import com.seonghyeon.sentinelapi.controller.auth.dto.DeviceView
 import com.seonghyeon.sentinelapi.controller.auth.dto.UserLoginResponse
+import com.seonghyeon.sentinelapi.common.exception.ErrorCode
+import com.seonghyeon.sentinelapi.common.exception.SentinelException
 import com.seonghyeon.sentinelapi.domain.LoginHistory
-import com.seonghyeon.sentinelapi.repository.LoginHistoryRepository
 import com.seonghyeon.sentinelapi.service.ApplicationService
+import com.seonghyeon.sentinelapi.service.DeviceService
+import com.seonghyeon.sentinelapi.service.LoginHistoryService
 import com.seonghyeon.sentinelapi.service.TokenAuthService
 import com.seonghyeon.sentinelapi.utils.clientIp
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 @RestController
 @RequestMapping("/api/v1/auth")
 class UserController(
     private val applicationService: ApplicationService,
     private val tokenAuthService: TokenAuthService,
-    private val loginHistoryRepository: LoginHistoryRepository,
+    private val loginHistoryService: LoginHistoryService,
+    private val deviceService: DeviceService,
 ) {
 
     @PostMapping("/login/token")
     fun loginToken(
         @RequestHeader("X-Client-Id") appId: String,
+        @RequestHeader(value = "X-Device-Id", required = false) deviceId: String?,
         @RequestParam("token") token: String,
         request: HttpServletRequest,
     ): ResponseEntity<UserLoginResponse> {
         val clientId = applicationService.resolveClientId(appId)
         val t = tokenAuthService.check(token, clientId)
 
-        // TODO 활용 IP 개수 확인 및 제한
-        // 1시간 내에 로그인 개수가 제한 수 이상이면 429 응답
-        // 앞단에서는 429를 받았을 때 "이전에 사용한 PC를 로그아웃하고 사용하시겠습니까?" 등으로
+        if (t.maxDeviceCount > 0 && deviceId.isNullOrBlank()) {
+            throw SentinelException(ErrorCode.DEVICE_ID_REQUIRED)
+        }
 
-        loginHistoryRepository.save(
-            LoginHistory(id = 0, token = token, appId = appId, ip = request.clientIp(), createdAt = LocalDateTime.now())
+        if (!deviceId.isNullOrBlank()) {
+            deviceService.login(t, deviceId)
+        }
+
+        loginHistoryService.save(
+            LoginHistory(
+                id = 0,
+                token = token,
+                appId = appId,
+                ip = request.clientIp(),
+                deviceId = deviceId,
+                createdAt = LocalDateTime.now(ZoneOffset.UTC),
+            )
         )
 
         return ResponseEntity.ok(UserLoginResponse.from(t))
@@ -42,10 +60,52 @@ class UserController(
     @PostMapping("/check/token")
     fun checkToken(
         @RequestHeader("X-Client-Id") appId: String,
+        @RequestHeader(value = "X-Device-Id", required = false) deviceId: String?,
         @RequestParam("token") token: String,
     ): ResponseEntity<UserLoginResponse> {
         val clientId = applicationService.resolveClientId(appId)
         val userToken = tokenAuthService.check(token, clientId)
+
+        if (!deviceId.isNullOrBlank()) {
+            deviceService.check(userToken.id, deviceId)
+        }
+
         return ResponseEntity.ok(UserLoginResponse.from(userToken))
+    }
+
+    @GetMapping("/devices")
+    fun getDevices(
+        @RequestHeader("X-Client-Id") appId: String,
+        @RequestParam("token") token: String,
+    ): ResponseEntity<List<DeviceView>> {
+        val clientId = applicationService.resolveClientId(appId)
+        val userToken = tokenAuthService.check(token, clientId)
+        val devices = deviceService.findAllByToken(userToken.id)
+            .map { DeviceView(it.deviceId, it.registeredAt, it.lastSeenAt) }
+        return ResponseEntity.ok(devices)
+    }
+
+    @DeleteMapping("/devices/{deviceId}")
+    fun removeDevice(
+        @RequestHeader("X-Client-Id") appId: String,
+        @RequestParam("token") token: String,
+        @PathVariable deviceId: String,
+    ): ResponseEntity<Void> {
+        val clientId = applicationService.resolveClientId(appId)
+        val userToken = tokenAuthService.check(token, clientId)
+        deviceService.remove(userToken.id, deviceId)
+        return ResponseEntity.noContent().build()
+    }
+
+    @DeleteMapping("/logout")
+    fun logout(
+        @RequestHeader("X-Client-Id") appId: String,
+        @RequestHeader("X-Device-Id") deviceId: String,
+        @RequestParam("token") token: String,
+    ): ResponseEntity<Void> {
+        val clientId = applicationService.resolveClientId(appId)
+        val userToken = tokenAuthService.check(token, clientId)
+        deviceService.remove(userToken.id, deviceId)
+        return ResponseEntity.noContent().build()
     }
 }

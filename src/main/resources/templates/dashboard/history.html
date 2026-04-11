@@ -1,13 +1,24 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head th:replace="~{fragments/layout :: head}"></head>
+<style>
+    .search-form { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; margin-bottom:16px; }
+    .search-form input { min-width:200px; }
+    .btn-reset { padding:11px 16px; background:#f1f5f9; color:#475569; border:1px solid #ddd; border-radius:4px; font-size:14px; cursor:pointer; text-decoration:none; line-height:1; display:inline-flex; align-items:center; }
+    .btn-reset:hover { background:#e2e8f0; }
+    .pagination { display:flex; gap:8px; align-items:center; justify-content:center; margin-top:20px; }
+    .pagination a, .pagination span { padding:6px 12px; border:1px solid #ddd; border-radius:4px; font-size:13px; text-decoration:none; color:#475569; }
+    .pagination a:hover { background:#f1f5f9; }
+    .pagination .current { background:#2563eb; color:#fff; border-color:#2563eb; }
+    .pagination .disabled { color:#cbd5e1; pointer-events:none; }
+</style>
 <body>
 <div th:replace="~{fragments/layout :: sidebar('history')}"></div>
 <div class="main">
     <div class="page-title">사용자 히스토리</div>
 
     <!-- 차트 영역 -->
-    <div style="display:flex; gap:24px; margin-bottom:24px;">
+    <div style="display:flex; gap:24px; margin-bottom:24px; max-width:1200px;">
         <div class="card" style="flex:1; min-width:0;">
             <h2>서비스별 접근 횟수</h2>
             <canvas id="appChart" height="200"></canvas>
@@ -20,11 +31,25 @@
 
     <!-- 목록 -->
     <div class="card">
+        <!-- 검색 폼 -->
+        <form method="get" th:action="@{/dashboard/history}" class="search-form">
+            <div>
+                <label>애플리케이션</label>
+                <input type="text" name="appName" th:value="${appName}" placeholder="앱 이름 검색"/>
+            </div>
+            <div>
+                <label>토큰</label>
+                <input type="text" name="tokenStr" th:value="${tokenStr}" placeholder="토큰 검색"/>
+            </div>
+            <button type="submit">검색</button>
+            <a th:href="@{/dashboard/history}" class="btn-reset">초기화</a>
+        </form>
+
         <table>
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>일시</th>
+                    <th>일시 (KST)</th>
                     <th>애플리케이션</th>
                     <th>토큰</th>
                     <th>IP</th>
@@ -33,16 +58,34 @@
             <tbody>
                 <tr th:each="h : ${histories}">
                     <td th:text="${h.id}"></td>
-                    <td th:text="${#temporals.format(h.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                    <td th:text="${#temporals.format(h.createdAtKst, 'yyyy-MM-dd HH:mm:ss')}"></td>
                     <td th:text="${appNames[h.appId] ?: h.appId}"></td>
                     <td th:text="${h.token}"></td>
                     <td th:text="${h.ip}"></td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(histories)}">
-                    <td colspan="5" style="text-align:center; color:#94a3b8; padding: 24px;">히스토리가 없습니다.</td>
+                    <td colspan="5" style="text-align:center; color:#94a3b8; padding:24px;">히스토리가 없습니다.</td>
                 </tr>
             </tbody>
         </table>
+
+        <!-- 페이지네이션 -->
+        <div class="pagination" th:if="${totalPages > 1}">
+            <a th:if="${currentPage > 0}"
+               th:href="@{/dashboard/history(page=${currentPage - 1}, appName=${appName}, tokenStr=${tokenStr})}">이전</a>
+            <span th:if="${currentPage == 0}" class="disabled">이전</span>
+
+            <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                <span th:if="${i == currentPage}" class="current" th:text="${i + 1}"></span>
+                <a th:unless="${i == currentPage}"
+                   th:href="@{/dashboard/history(page=${i}, appName=${appName}, tokenStr=${tokenStr})}"
+                   th:text="${i + 1}"></a>
+            </th:block>
+
+            <a th:if="${currentPage < totalPages - 1}"
+               th:href="@{/dashboard/history(page=${currentPage + 1}, appName=${appName}, tokenStr=${tokenStr})}">다음</a>
+            <span th:if="${currentPage >= totalPages - 1}" class="disabled">다음</span>
+        </div>
     </div>
 </div>
 

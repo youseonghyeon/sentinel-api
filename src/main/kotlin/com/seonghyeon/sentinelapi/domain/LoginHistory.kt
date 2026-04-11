@@ -21,6 +21,9 @@ class LoginHistory(
     @Column(name = "ip", nullable = false)
     val ip: String,
 
+    @Column(name = "device_id")
+    val deviceId: String?,
+
     @Column(name = "created_at", nullable = false)
     val createdAt: LocalDateTime,
 )

@@ -1,12 +1,14 @@
 package com.seonghyeon.sentinelapi.controller.auth
 
-import com.seonghyeon.sentinelapi.repository.AppRepository
-import com.seonghyeon.sentinelapi.repository.LoginHistoryRepository
-import com.seonghyeon.sentinelapi.repository.TokenRepository
+import com.seonghyeon.sentinelapi.controller.auth.dto.LoginHistoryView
 import com.seonghyeon.sentinelapi.service.ApiKeyService
 import com.seonghyeon.sentinelapi.service.ApplicationService
+import com.seonghyeon.sentinelapi.service.DeviceService
+import com.seonghyeon.sentinelapi.service.LoginHistoryService
 import com.seonghyeon.sentinelapi.service.ManagerService
 import com.seonghyeon.sentinelapi.service.TokenAuthService
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.time.LocalDate
+import java.time.ZoneId
 
 @Controller
 class MangerController(
@@ -23,9 +26,8 @@ class MangerController(
     private val managerService: ManagerService,
     private val applicationService: ApplicationService,
     private val apiKeyService: ApiKeyService,
-    private val appRepository: AppRepository,
-    private val tokenRepository: TokenRepository,
-    private val loginHistoryRepository: LoginHistoryRepository,
+    private val loginHistoryService: LoginHistoryService,
+    private val deviceService: DeviceService,
 ) {
 
     @GetMapping("/login")
@@ -38,7 +40,7 @@ class MangerController(
 
     @GetMapping("/dashboard/register")
     fun registerPage(model: Model): String {
-        model.addAttribute("apps", appRepository.findAll())
+        model.addAttribute("apps", applicationService.findAll())
         return "dashboard/register"
     }
 
@@ -52,9 +54,10 @@ class MangerController(
     fun registerToken(
         @RequestParam appId: Long,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) expireDate: LocalDate,
+        @RequestParam(defaultValue = "1") maxDeviceCount: Int,
         redirectAttributes: RedirectAttributes,
     ): String {
-        val token = tokenAuthService.generate(appId, expireDate)
+        val token = tokenAuthService.generate(appId, expireDate, maxDeviceCount)
         redirectAttributes.addFlashAttribute("newToken", token.tokenStr)
         redirectAttributes.addFlashAttribute("newAppName", token.application.name)
         redirectAttributes.addFlashAttribute("newExpireDate", token.expireDate)
@@ -85,16 +88,16 @@ class MangerController(
     fun usersPage(
         @RequestParam(required = false) appName: String?,
         @RequestParam(required = false) tokenStr: String?,
+        @RequestParam(defaultValue = "0") page: Int,
         model: Model,
     ): String {
-        val tokens = when {
-            !appName.isNullOrBlank() -> tokenRepository.findByApplication_NameContainingIgnoreCaseOrderByIdDesc(appName)
-            !tokenStr.isNullOrBlank() -> tokenRepository.findByTokenStrContainingIgnoreCaseOrderByIdDesc(tokenStr)
-            else -> tokenRepository.findAllByOrderByIdDesc()
-        }
-        model.addAttribute("tokens", tokens)
+        val pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "id"))
+        val tokenPage = tokenAuthService.findPage(appName, tokenStr, pageable)
+        model.addAttribute("tokens", tokenPage.content)
         model.addAttribute("appName", appName.orEmpty())
         model.addAttribute("tokenStr", tokenStr.orEmpty())
+        model.addAttribute("currentPage", tokenPage.number)
+        model.addAttribute("totalPages", tokenPage.totalPages)
         return "dashboard/users"
     }
 
@@ -103,15 +106,44 @@ class MangerController(
         @PathVariable id: Long,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) expireDate: LocalDate,
     ): String {
-        val token = tokenRepository.findById(id).orElseThrow()
-        token.expireDate = expireDate
-        tokenRepository.save(token)
+        tokenAuthService.updateExpireDate(id, expireDate)
         return "redirect:/dashboard/users"
+    }
+
+    @PostMapping("/dashboard/users/{id}/maxDevices")
+    fun updateMaxDeviceCount(
+        @PathVariable id: Long,
+        @RequestParam maxDeviceCount: Int,
+    ): String {
+        tokenAuthService.updateMaxDeviceCount(id, maxDeviceCount)
+        return "redirect:/dashboard/users"
+    }
+
+    @GetMapping("/dashboard/users/{id}/devices")
+    fun devicesPage(@PathVariable id: Long, model: Model): String {
+        val kst = ZoneId.of("Asia/Seoul")
+        val utc = ZoneId.of("UTC")
+        val devices = deviceService.findAllByToken(id).map { d ->
+            mapOf(
+                "deviceId" to d.deviceId,
+                "registeredAtKst" to d.registeredAt.atZone(utc).withZoneSameInstant(kst).toLocalDateTime(),
+                "lastSeenAtKst" to d.lastSeenAt.atZone(utc).withZoneSameInstant(kst).toLocalDateTime(),
+            )
+        }
+        model.addAttribute("tokenId", id)
+        model.addAttribute("devices", devices)
+        return "dashboard/devices"
+    }
+
+    @PostMapping("/dashboard/users/{id}/devices/{deviceId}/delete")
+    fun deleteDevice(@PathVariable id: Long, @PathVariable deviceId: String): String {
+        deviceService.remove(id, deviceId)
+        return "redirect:/dashboard/users/$id/devices"
     }
 
     @PostMapping("/dashboard/users/{id}/delete")
     fun deleteToken(@PathVariable id: Long): String {
-        tokenRepository.deleteById(id)
+        tokenAuthService.delete(id)
         return "redirect:/dashboard/users"
     }
 
@@ -133,39 +165,61 @@ class MangerController(
 
     @GetMapping("/dashboard/apps")
     fun appsPage(model: Model): String {
-        model.addAttribute("apps", appRepository.findAll())
+        model.addAttribute("apps", applicationService.findAll())
         return "dashboard/apps"
     }
 
     @PostMapping("/dashboard/apps/{id}/delete")
     fun deleteApp(@PathVariable id: Long): String {
-        appRepository.deleteById(id)
+        applicationService.delete(id)
         return "redirect:/dashboard/apps"
     }
 
     // --- 히스토리 ---
 
     @GetMapping("/dashboard/history")
-    fun historyPage(model: Model): String {
-        val histories = loginHistoryRepository.findAll()
-        val appNames = appRepository.findAll().associate { it.appId to it.name }
+    fun historyPage(
+        @RequestParam(required = false) appName: String?,
+        @RequestParam(required = false) tokenStr: String?,
+        @RequestParam(defaultValue = "0") page: Int,
+        model: Model,
+    ): String {
+        val kst = ZoneId.of("Asia/Seoul")
+        val utc = ZoneId.of("UTC")
+        val pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"))
+        val historyPage = loginHistoryService.search(appName, tokenStr, pageable)
 
-        // 서비스별 접근 횟수
-        val appAccessCounts = histories
+        val appNames = applicationService.findAllAsNameMap()
+
+        val historyViews = historyPage.map { h ->
+            LoginHistoryView(
+                id = h.id,
+                token = h.token,
+                appId = h.appId,
+                ip = h.ip,
+                createdAtKst = h.createdAt.atZone(utc).withZoneSameInstant(kst).toLocalDateTime(),
+            )
+        }
+
+        // 차트용 전체 데이터 (검색 필터 미적용)
+        val allHistories = loginHistoryService.findAll()
+        val appAccessCounts = allHistories
             .groupBy { appNames[it.appId] ?: it.appId }
             .mapValues { it.value.size }
             .toSortedMap()
-
-        // 날짜별 사용자 수
-        val dailyCounts = histories
-            .groupBy { it.createdAt.toLocalDate().toString() }
+        val dailyCounts = allHistories
+            .groupBy { it.createdAt.atZone(utc).withZoneSameInstant(kst).toLocalDate().toString() }
             .mapValues { it.value.size }
             .toSortedMap()
 
-        model.addAttribute("histories", histories)
+        model.addAttribute("histories", historyViews.content)
         model.addAttribute("appNames", appNames)
         model.addAttribute("appAccessCounts", appAccessCounts)
         model.addAttribute("dailyCounts", dailyCounts)
+        model.addAttribute("appName", appName.orEmpty())
+        model.addAttribute("tokenStr", tokenStr.orEmpty())
+        model.addAttribute("currentPage", historyViews.number)
+        model.addAttribute("totalPages", historyViews.totalPages)
         return "dashboard/history"
     }
 }

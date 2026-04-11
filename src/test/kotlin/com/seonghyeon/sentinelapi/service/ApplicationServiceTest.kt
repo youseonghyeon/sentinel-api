@@ -39,4 +39,34 @@ class ApplicationServiceTest : AbstractIntegrationTest() {
         val ex = assertThrows<SentinelException> { applicationService.resolveClientId("app_unknown") }
         assertThat(ex.errorCode).isEqualTo(ErrorCode.INVALID_APPLICATION)
     }
+
+    @Test
+    fun `findAll - 등록된 앱 목록을 반환한다`() {
+        appRepository.save(App(id = 0, name = "App1", description = "", appId = "app_all01"))
+        appRepository.save(App(id = 0, name = "App2", description = "", appId = "app_all02"))
+
+        val result = applicationService.findAll()
+
+        assertThat(result.map { it.appId }).contains("app_all01", "app_all02")
+    }
+
+    @Test
+    fun `findAllAsNameMap - appId를 키로 앱 이름 맵을 반환한다`() {
+        appRepository.save(App(id = 0, name = "App1", description = "", appId = "app_map01"))
+        appRepository.save(App(id = 0, name = "App2", description = "", appId = "app_map02"))
+
+        val map = applicationService.findAllAsNameMap()
+
+        assertThat(map["app_map01"]).isEqualTo("App1")
+        assertThat(map["app_map02"]).isEqualTo("App2")
+    }
+
+    @Test
+    fun `delete - 앱을 삭제한다`() {
+        val app = appRepository.save(App(id = 0, name = "ToDelete", description = "", appId = "app_del01"))
+
+        applicationService.delete(app.id)
+
+        assertThat(appRepository.findById(app.id)).isEmpty
+    }
 }

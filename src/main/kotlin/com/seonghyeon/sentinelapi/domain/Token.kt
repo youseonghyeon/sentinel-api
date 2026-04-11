@@ -23,7 +23,10 @@ class Token(
     var tokenStr: String,
 
     @Column(name = "expire_date", nullable = false)
-    var expireDate: LocalDate
+    var expireDate: LocalDate,
+
+    @Column(name = "max_device_count", nullable = false)
+    var maxDeviceCount: Int = 1,
 
 ) {
 }
