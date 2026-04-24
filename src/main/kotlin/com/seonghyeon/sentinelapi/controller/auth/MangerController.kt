@@ -1,5 +1,6 @@
 package com.seonghyeon.sentinelapi.controller.auth
 
+import com.seonghyeon.sentinelapi.common.exception.SentinelException
 import com.seonghyeon.sentinelapi.controller.auth.dto.LoginHistoryView
 import com.seonghyeon.sentinelapi.service.ApiKeyService
 import com.seonghyeon.sentinelapi.service.AppFileService
@@ -46,6 +47,9 @@ class MangerController(
         model.addAttribute("apiKeys", apiKeyService.findAll())
         return "dashboard/apikeys"
     }
+
+    @GetMapping("/dashboard/api-docs")
+    fun apiDocsPage(): String = "dashboard/api-docs"
 
     @PostMapping("/dashboard/register/token")
     fun registerToken(
@@ -191,8 +195,17 @@ class MangerController(
             redirectAttributes.addFlashAttribute("error", "파일이 비어있습니다.")
             return "redirect:/dashboard/apps/$appId/files"
         }
-        appFileService.upload(appId, version.trim(), changelog, file)
-        return "redirect:/dashboard/apps/$appId/files?success=upload"
+        if (version.isBlank()) {
+            redirectAttributes.addFlashAttribute("error", "버전을 입력해주세요.")
+            return "redirect:/dashboard/apps/$appId/files"
+        }
+        return try {
+            appFileService.upload(appId, version.trim(), changelog, file)
+            "redirect:/dashboard/apps/$appId/files?success=upload"
+        } catch (e: SentinelException) {
+            redirectAttributes.addFlashAttribute("error", e.errorCode.message)
+            "redirect:/dashboard/apps/$appId/files"
+        }
     }
 
     @PostMapping("/dashboard/apps/{appId}/files/{fileId}/latest")

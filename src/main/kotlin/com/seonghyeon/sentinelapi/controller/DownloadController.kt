@@ -29,16 +29,14 @@ class DownloadController(
 
     @GetMapping("/{appId}")
     fun page(@PathVariable appId: String, model: Model): String {
-        val clientId = try {
-            applicationService.resolveClientId(appId)
-        } catch (e: SentinelException) {
+        val app = applicationService.findByAppId(appId)
+        if (app == null) {
             model.addAttribute("notFound", true)
             model.addAttribute("appIdInput", appId)
             return "download"
         }
-        val app = applicationService.findAll().first { it.id == clientId }
         model.addAttribute("app", app)
-        model.addAttribute("files", appFileService.findLatestVersions(clientId, 2))
+        model.addAttribute("files", appFileService.findLatestVersions(app.id, 2))
         return "download"
     }
 
@@ -70,7 +68,13 @@ class DownloadController(
             return "redirect:/download/$appId"
         }
 
-        val path = appFileService.resolvePath(file)
+        val path = try {
+            appFileService.resolvePath(file)
+        } catch (e: SentinelException) {
+            redirectAttributes.addFlashAttribute("error", e.errorCode.message)
+            return "redirect:/download/$appId"
+        }
+
         val disposition = ContentDisposition.attachment()
             .filename(file.filename, StandardCharsets.UTF_8)
             .build()

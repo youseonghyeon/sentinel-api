@@ -128,9 +128,25 @@ class AppFileService(
         runCatching {
             Files.deleteIfExists(abs)
             Files.deleteIfExists(abs.parent)
-        }
+        }.onFailure { log.warn("Failed to cleanup disk file: path={}, reason={}", abs, it.message) }
         appFileRepository.delete(entity)
         log.info("AppFile deleted: appId={}, fileId={}, version={}", appId, fileId, entity.version)
+    }
+
+    @Transactional
+    fun deleteAllByApp(appId: Long) {
+        val files = appFileRepository.findAllByApplicationIdOrderByUploadedAtDesc(appId)
+        if (files.isEmpty()) return
+        files.forEach { f ->
+            val abs = Path.of(storageRoot, f.storagePath)
+            runCatching {
+                Files.deleteIfExists(abs)
+                Files.deleteIfExists(abs.parent)
+            }.onFailure { log.warn("Failed to cleanup disk file: path={}, reason={}", abs, it.message) }
+        }
+        appFileRepository.deleteAll(files)
+        runCatching { Files.deleteIfExists(Path.of(storageRoot, appId.toString())) }
+        log.info("All AppFiles deleted for appId={} count={}", appId, files.size)
     }
 
     fun resolvePath(appFile: AppFile): Path {
