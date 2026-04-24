@@ -2,6 +2,7 @@ package com.seonghyeon.sentinelapi.controller.auth
 
 import com.seonghyeon.sentinelapi.controller.auth.dto.LoginHistoryView
 import com.seonghyeon.sentinelapi.service.ApiKeyService
+import com.seonghyeon.sentinelapi.service.AppFileService
 import com.seonghyeon.sentinelapi.service.ApplicationService
 import com.seonghyeon.sentinelapi.service.DeviceService
 import com.seonghyeon.sentinelapi.service.LoginHistoryService
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.time.LocalDate
 import java.time.ZoneId
@@ -28,6 +30,7 @@ class MangerController(
     private val apiKeyService: ApiKeyService,
     private val loginHistoryService: LoginHistoryService,
     private val deviceService: DeviceService,
+    private val appFileService: AppFileService,
 ) {
 
     @GetMapping("/login")
@@ -160,6 +163,45 @@ class MangerController(
     fun deleteApp(@PathVariable id: Long): String {
         applicationService.delete(id)
         return "redirect:/dashboard/apps"
+    }
+
+    // --- 애플리케이션 파일 ---
+
+    @GetMapping("/dashboard/apps/{appId}/files")
+    fun appFilesPage(@PathVariable appId: Long, model: Model): String {
+        val app = applicationService.findAll().firstOrNull { it.id == appId }
+            ?: return "redirect:/dashboard/apps"
+        model.addAttribute("app", app)
+        model.addAttribute("files", appFileService.findAllByApp(appId))
+        return "dashboard/files"
+    }
+
+    @PostMapping("/dashboard/apps/{appId}/files")
+    fun uploadAppFile(
+        @PathVariable appId: Long,
+        @RequestParam version: String,
+        @RequestParam(required = false) changelog: String?,
+        @RequestParam("file") file: MultipartFile,
+        redirectAttributes: RedirectAttributes,
+    ): String {
+        if (file.isEmpty) {
+            redirectAttributes.addFlashAttribute("error", "파일이 비어있습니다.")
+            return "redirect:/dashboard/apps/$appId/files"
+        }
+        appFileService.upload(appId, version.trim(), changelog, file)
+        return "redirect:/dashboard/apps/$appId/files?success=upload"
+    }
+
+    @PostMapping("/dashboard/apps/{appId}/files/{fileId}/latest")
+    fun markLatest(@PathVariable appId: Long, @PathVariable fileId: Long): String {
+        appFileService.markLatest(appId, fileId)
+        return "redirect:/dashboard/apps/$appId/files?success=latest"
+    }
+
+    @PostMapping("/dashboard/apps/{appId}/files/{fileId}/delete")
+    fun deleteAppFile(@PathVariable appId: Long, @PathVariable fileId: Long): String {
+        appFileService.delete(appId, fileId)
+        return "redirect:/dashboard/apps/$appId/files?success=delete"
     }
 
     // --- 히스토리 ---

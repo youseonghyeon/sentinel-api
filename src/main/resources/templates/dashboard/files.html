@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head th:replace="~{fragments/layout :: head}"></head>
+<style>
+    .btn-row { padding: 6px 12px; height: 30px; font-size: 13px; line-height: 1; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; font-family: inherit; }
+    .btn-latest { background: #16a34a; color: #fff; }
+    .btn-latest:hover { background: #15803d; }
+    .btn-delete { background: #ef4444; color: #fff; }
+    .btn-delete:hover { background: #dc2626; }
+    .btn-back { background: #f1f5f9; color: #475569; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; height: 30px; }
+    .btn-back:hover { background: #e2e8f0; }
+    .action-cell { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .action-form { display: inline-flex; margin: 0; }
+    .mono { font-family: monospace; font-size: 12px; color: #64748b; }
+    .sha { display: inline-block; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+    .latest-badge { display: inline-block; padding: 2px 8px; background: #dcfce7; color: #166534; border-radius: 12px; font-size: 12px; margin-left: 6px; }
+    textarea { padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 60px; width: 100%; box-sizing: border-box; }
+    input[type=file] { padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background: #fff; }
+</style>
+<body>
+<div th:replace="~{fragments/layout :: sidebar('apps')}"></div>
+<div class="main">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px;">
+        <a th:href="@{/dashboard/apps}" class="btn-back">← 목록</a>
+        <div class="page-title" style="margin:0;">
+            파일 관리 · <span th:text="${app.name}"></span>
+            <span class="mono" style="font-size:13px; margin-left:8px;" th:text="${app.appId}"></span>
+        </div>
+    </div>
+
+    <div th:if="${param.success == 'upload'}" style="background:#dcfce7;color:#166534;padding:12px 16px;border-radius:6px;margin-bottom:16px;">파일이 업로드되었습니다.</div>
+    <div th:if="${param.success == 'latest'}" style="background:#dcfce7;color:#166534;padding:12px 16px;border-radius:6px;margin-bottom:16px;">최신 버전이 변경되었습니다.</div>
+    <div th:if="${param.success == 'delete'}" style="background:#fef9c3;color:#854d0e;padding:12px 16px;border-radius:6px;margin-bottom:16px;">파일이 삭제되었습니다.</div>
+    <div th:if="${error}" style="background:#fee2e2;color:#991b1b;padding:12px 16px;border-radius:6px;margin-bottom:16px;" th:text="${error}"></div>
+
+    <div class="card">
+        <h2>새 버전 업로드</h2>
+        <form th:action="@{/dashboard/apps/{id}/files(id=${app.id})}" method="post" enctype="multipart/form-data">
+            <div class="form-row" style="align-items:flex-start;">
+                <div>
+                    <label for="version">버전</label>
+                    <input type="text" id="version" name="version" placeholder="예: 1.0.0" required style="min-width:160px;">
+                </div>
+                <div style="flex:1; min-width:300px;">
+                    <label for="changelog">변경 내역 (선택)</label>
+                    <textarea id="changelog" name="changelog" placeholder="이번 버전의 변경사항을 적어주세요."></textarea>
+                </div>
+            </div>
+            <div class="form-row" style="margin-top:12px;">
+                <div>
+                    <label for="file">파일</label>
+                    <input type="file" id="file" name="file" required>
+                </div>
+                <button type="submit">업로드</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>버전 목록</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>버전</th>
+                    <th>파일명</th>
+                    <th>크기</th>
+                    <th>SHA-256</th>
+                    <th>업로드일시(KST)</th>
+                    <th>관리</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="f : ${files}">
+                    <td>
+                        <span th:text="${f.version}"></span>
+                        <span th:if="${f.isLatest}" class="latest-badge">LATEST</span>
+                    </td>
+                    <td th:text="${f.filename}"></td>
+                    <td th:text="${#numbers.formatInteger(f.sizeBytes, 0, 'COMMA')} + ' B'"></td>
+                    <td><span class="mono sha" th:text="${f.sha256}" th:title="${f.sha256}"></span></td>
+                    <td th:text="${#temporals.format(f.uploadedAt.atZone(T(java.time.ZoneOffset).UTC).withZoneSameInstant(T(java.time.ZoneId).of('Asia/Seoul')).toLocalDateTime(), 'yyyy-MM-dd HH:mm')}"></td>
+                    <td>
+                        <div class="action-cell">
+                            <form th:unless="${f.isLatest}" th:action="@{/dashboard/apps/{appId}/files/{fileId}/latest(appId=${app.id}, fileId=${f.id})}" method="post" class="action-form">
+                                <button type="submit" class="btn-row btn-latest">최신으로 지정</button>
+                            </form>
+                            <form th:action="@{/dashboard/apps/{appId}/files/{fileId}/delete(appId=${app.id}, fileId=${f.id})}" method="post" class="action-form"
+                                  onsubmit="return confirm('삭제하시겠습니까? 파일도 함께 제거됩니다.')">
+                                <button type="submit" class="btn-row btn-delete">삭제</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(files)}">
+                    <td colspan="6" style="text-align:center; color:#94a3b8; padding:24px;">등록된 파일이 없습니다.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
