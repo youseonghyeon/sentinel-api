@@ -45,6 +45,13 @@ readinessProbe:
 
 resources: {}
 
+persistence:
+  enabled: true
+  storageClass: local-path
+  size: 10Gi
+  mountPath: /data
+  storageRoot: /data/apps
+
 nodeSelector: {}
 tolerations: []
 affinity: {}
