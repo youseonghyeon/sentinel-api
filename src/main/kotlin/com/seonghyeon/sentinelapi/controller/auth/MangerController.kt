@@ -155,7 +155,10 @@ class MangerController(
 
     @GetMapping("/dashboard/apps")
     fun appsPage(model: Model): String {
-        model.addAttribute("apps", applicationService.findAll())
+        val apps = applicationService.findAll()
+        val latestVersions = apps.associate { it.id to appFileService.findLatestOrNull(it.id)?.version }
+        model.addAttribute("apps", apps)
+        model.addAttribute("latestVersions", latestVersions)
         return "dashboard/apps"
     }
 

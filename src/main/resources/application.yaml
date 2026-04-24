@@ -30,7 +30,7 @@ server:
 
 sentinel:
   storage:
-    root: ${STORAGE_ROOT:/data/apps}
+    root: ${STORAGE_ROOT:data/apps}
 
 management:
   server:

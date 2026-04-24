@@ -1,16 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
-<head th:replace="~{fragments/layout :: head}">
+<head th:replace="~{fragments/layout :: head}"></head>
 <style>
-    .btn-row { padding: 6px 12px; height: 30px; font-size: 13px; line-height: 1; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; font-family: inherit; }
-    .btn-files { background: #0891b2; color: #fff; }
-    .btn-files:hover { background: #0e7490; }
-    .btn-delete { background: #ef4444; color: #fff; }
-    .btn-delete:hover { background: #dc2626; }
-    .action-cell { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-    .action-form { display: inline-flex; margin: 0; }
+    .version-cell { font-family: monospace; font-size: 13px; color: #334155; }
+    .version-cell.none { color: #cbd5e1; font-family: inherit; }
 </style>
-</head>
 <body>
 <div th:replace="~{fragments/layout :: sidebar('apps')}"></div>
 <div class="main">
@@ -43,6 +37,7 @@
                     <th>앱 이름</th>
                     <th>App ID</th>
                     <th>설명</th>
+                    <th>현재 버전</th>
                     <th>관리</th>
                 </tr>
             </thead>
@@ -53,21 +48,59 @@
                     <td th:text="${app.appId}" style="font-family:monospace;"></td>
                     <td th:text="${app.description}"></td>
                     <td>
-                        <div class="action-cell">
-                            <a th:href="@{/dashboard/apps/{id}/files(id=${app.id})}" class="btn-row btn-files">파일 관리</a>
-                            <form th:action="@{/dashboard/apps/{id}/delete(id=${app.id})}" method="post" class="action-form"
-                                  onsubmit="return confirm('삭제하시겠습니까? 연결된 토큰도 함께 삭제됩니다.')">
-                                <button type="submit" class="btn-row btn-delete">삭제</button>
-                            </form>
+                        <span th:with="v=${latestVersions.get(app.id)}"
+                              th:class="${v != null} ? 'version-cell' : 'version-cell none'"
+                              th:text="${v != null ? v : '-'}"></span>
+                    </td>
+                    <td>
+                        <div class="menu-wrap">
+                            <button type="button" class="btn-more" onclick="toggleMenu(this)" aria-label="더보기">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                            </button>
+                            <div class="menu" role="menu">
+                                <a th:href="@{/dashboard/apps/{id}/files(id=${app.id})}" class="menu-item">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    파일 관리
+                                </a>
+                                <a th:href="@{/download/{appId}(appId=${app.appId})}" target="_blank" class="menu-item">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                    다운로드 페이지
+                                </a>
+                                <div class="menu-divider"></div>
+                                <form th:action="@{/dashboard/apps/{id}/delete(id=${app.id})}" method="post" class="menu-form"
+                                      onsubmit="return confirm('삭제하시겠습니까? 연결된 토큰도 함께 삭제됩니다.')">
+                                    <button type="submit" class="menu-item danger">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+                                        삭제
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(apps)}">
-                    <td colspan="5" style="text-align:center; color:#94a3b8; padding: 24px;">등록된 애플리케이션이 없습니다.</td>
+                    <td colspan="6" style="text-align:center; color:#94a3b8; padding: 24px;">등록된 애플리케이션이 없습니다.</td>
                 </tr>
             </tbody>
         </table>
     </div>
 </div>
+<script>
+    function toggleMenu(btn) {
+        const menu = btn.nextElementSibling;
+        const wasOpen = menu.classList.contains('open');
+        closeAllMenus();
+        if (!wasOpen) menu.classList.add('open');
+    }
+    function closeAllMenus() {
+        document.querySelectorAll('.menu.open').forEach(m => m.classList.remove('open'));
+    }
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.menu-wrap')) closeAllMenus();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeAllMenus();
+    });
+</script>
 </body>
 </html>

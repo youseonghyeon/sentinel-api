@@ -101,6 +101,9 @@ class AppFileService(
         appFileRepository.findByApplicationIdAndIsLatestTrue(appId)
             ?: throw SentinelException(ErrorCode.NO_FILE_AVAILABLE)
 
+    fun findLatestOrNull(appId: Long): AppFile? =
+        appFileRepository.findByApplicationIdAndIsLatestTrue(appId)
+
     fun findByAppAndVersion(appId: Long, version: String): AppFile =
         appFileRepository.findByApplicationIdAndVersion(appId, version)
             ?: throw SentinelException(ErrorCode.INVALID_VERSION)
