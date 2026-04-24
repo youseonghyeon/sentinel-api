@@ -34,15 +34,9 @@ class MangerController(
     fun login(): String = "login"
 
     @GetMapping("/dashboard")
-    fun dashboard(): String = "redirect:/dashboard/register"
+    fun dashboard(): String = "redirect:/dashboard/apps"
 
     // --- 등록 ---
-
-    @GetMapping("/dashboard/register")
-    fun registerPage(model: Model): String {
-        model.addAttribute("apps", applicationService.findAll())
-        return "dashboard/register"
-    }
 
     @GetMapping("/dashboard/apikeys")
     fun apiKeysPage(model: Model): String {
@@ -61,7 +55,7 @@ class MangerController(
         redirectAttributes.addFlashAttribute("newToken", token.tokenStr)
         redirectAttributes.addFlashAttribute("newAppName", token.application.name)
         redirectAttributes.addFlashAttribute("newExpireDate", token.expireDate)
-        return "redirect:/dashboard/register"
+        return "redirect:/dashboard/users"
     }
 
     @PostMapping("/dashboard/register/app")
@@ -70,7 +64,7 @@ class MangerController(
         @RequestParam(required = false, defaultValue = "") description: String,
     ): String {
         applicationService.register(name, description)
-        return "redirect:/dashboard/register?success=app"
+        return "redirect:/dashboard/apps?success=app"
     }
 
     @PostMapping("/dashboard/register/manager")
@@ -79,7 +73,7 @@ class MangerController(
         @RequestParam password: String,
     ): String {
         managerService.register(username, password)
-        return "redirect:/dashboard/register?success=manager"
+        return "redirect:/dashboard/apikeys?success=manager"
     }
 
     // --- 사용자 관리 ---
@@ -94,6 +88,7 @@ class MangerController(
         val pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "id"))
         val tokenPage = tokenAuthService.findPage(appName, tokenStr, pageable)
         model.addAttribute("tokens", tokenPage.content)
+        model.addAttribute("apps", applicationService.findAll())
         model.addAttribute("appName", appName.orEmpty())
         model.addAttribute("tokenStr", tokenStr.orEmpty())
         model.addAttribute("currentPage", tokenPage.number)
@@ -101,21 +96,13 @@ class MangerController(
         return "dashboard/users"
     }
 
-    @PostMapping("/dashboard/users/{id}/expire")
-    fun updateExpireDate(
+    @PostMapping("/dashboard/users/{id}/update")
+    fun updateToken(
         @PathVariable id: Long,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) expireDate: LocalDate,
-    ): String {
-        tokenAuthService.updateExpireDate(id, expireDate)
-        return "redirect:/dashboard/users"
-    }
-
-    @PostMapping("/dashboard/users/{id}/maxDevices")
-    fun updateMaxDeviceCount(
-        @PathVariable id: Long,
         @RequestParam maxDeviceCount: Int,
     ): String {
-        tokenAuthService.updateMaxDeviceCount(id, maxDeviceCount)
+        tokenAuthService.update(id, expireDate, maxDeviceCount)
         return "redirect:/dashboard/users"
     }
 

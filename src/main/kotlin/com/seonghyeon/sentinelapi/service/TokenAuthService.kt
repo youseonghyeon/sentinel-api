@@ -43,14 +43,9 @@ class TokenAuthService(
         else -> tokenRepository.findAllBy(pageable)
     }
 
-    fun updateExpireDate(id: Long, expireDate: LocalDate) {
+    fun update(id: Long, expireDate: LocalDate, maxDeviceCount: Int) {
         val token = tokenRepository.findById(id).orElseThrow { SentinelException(ErrorCode.INVALID_TOKEN) }
         token.expireDate = expireDate
-        tokenRepository.save(token)
-    }
-
-    fun updateMaxDeviceCount(id: Long, maxDeviceCount: Int) {
-        val token = tokenRepository.findById(id).orElseThrow { SentinelException(ErrorCode.INVALID_TOKEN) }
         token.maxDeviceCount = maxDeviceCount
         tokenRepository.save(token)
     }

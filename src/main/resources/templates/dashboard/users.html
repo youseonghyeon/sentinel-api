@@ -2,43 +2,92 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head th:replace="~{fragments/layout :: head}"></head>
 <style>
-    .action-form { display: inline; }
-    .btn-delete { padding: 5px 12px; background: #ef4444; color: #fff; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
-    .btn-delete:hover { background: #dc2626; }
-    .btn-save { padding: 5px 12px; background: #2563eb; color: #fff; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
-    .btn-save:hover { background: #1d4ed8; }
-    .btn-device { padding: 5px 12px; background: #7c3aed; color: #fff; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; text-decoration: none; display: inline-block; }
+    .action-cell { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .action-form { display: inline-flex; margin: 0; }
+    .btn-row { padding: 6px 12px; height: 30px; font-size: 13px; line-height: 1; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; font-family: inherit; }
+    .btn-edit { background: #2563eb; color: #fff; }
+    .btn-edit:hover { background: #1d4ed8; }
+    .btn-device { background: #7c3aed; color: #fff; }
     .btn-device:hover { background: #6d28d9; }
-    input[type=date].inline { padding: 5px 8px; font-size: 13px; border: 1px solid #ddd; border-radius: 4px; }
-    input[type=number].inline { padding: 5px 8px; font-size: 13px; border: 1px solid #ddd; border-radius: 4px; width: 60px; }
+    .btn-delete { background: #ef4444; color: #fff; }
+    .btn-delete:hover { background: #dc2626; }
     .pagination { display:flex; gap:8px; align-items:center; justify-content:center; margin-top:20px; }
     .pagination a, .pagination span { padding:6px 12px; border:1px solid #ddd; border-radius:4px; font-size:13px; text-decoration:none; color:#475569; }
     .pagination a:hover { background:#f1f5f9; }
     .pagination .current { background:#2563eb; color:#fff; border-color:#2563eb; }
     .pagination .disabled { color:#cbd5e1; pointer-events:none; }
+
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-backdrop.open { display: flex; }
+    .modal { background: #fff; border-radius: 8px; padding: 24px; min-width: 360px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+    .modal h3 { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 16px; }
+    .modal .row { margin-bottom: 14px; }
+    .modal .row label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; }
+    .modal .row input { width: 100%; padding: 9px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+    .modal .hint { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+    .modal .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+    .modal .actions button { padding: 8px 16px; font-size: 14px; border-radius: 4px; border: none; cursor: pointer; }
+    .modal .btn-cancel { background: #f1f5f9; color: #475569; }
+    .modal .btn-cancel:hover { background: #e2e8f0; }
+    .modal .btn-submit { background: #2563eb; color: #fff; }
+    .modal .btn-submit:hover { background: #1d4ed8; }
+
+    .segmented { display: inline-flex; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff; height: 42px; }
+    .segmented button { padding: 0 14px; height: 100%; font-size: 13px; background: #fff; border: none; border-right: 1px solid #e2e8f0; color: #475569; cursor: pointer; font-family: inherit; transition: background .12s ease, color .12s ease; }
+    .segmented button:last-child { border-right: none; }
+    .segmented button:hover { background: #eff6ff; color: #2563eb; }
+    .segmented button:active { background: #dbeafe; }
 </style>
 <body>
 <div th:replace="~{fragments/layout :: sidebar('users')}"></div>
 <div class="main">
     <div class="page-title">사용자 관리</div>
     <div class="alert-success" th:if="${param.success == 'token'}" style="background:#dcfce7;color:#166534;padding:12px 16px;border-radius:6px;margin-bottom:16px;">토큰이 생성되었습니다.</div>
-    <div class="card" style="padding:16px 24px;">
-        <form th:action="@{/dashboard/users}" method="get">
+
+    <div class="card">
+        <h2>사용자 등록</h2>
+        <form th:action="@{/dashboard/register/token}" method="post">
             <div class="form-row">
                 <div>
-                    <label for="appName">애플리케이션</label>
-                    <input type="text" id="appName" name="appName" placeholder="앱 이름 검색" th:value="${appName}">
+                    <label for="appId">애플리케이션</label>
+                    <select id="appId" name="appId" required style="min-width:160px;">
+                        <option value="" disabled selected>앱 선택</option>
+                        <option th:each="app : ${apps}" th:value="${app.id}" th:text="${app.name}"></option>
+                    </select>
                 </div>
                 <div>
-                    <label for="tokenStr">토큰</label>
-                    <input type="text" id="tokenStr" name="tokenStr" placeholder="토큰 검색" th:value="${tokenStr}">
+                    <label for="expireDate">만료일</label>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input type="date" id="expireDate" name="expireDate" required style="min-width:160px;">
+                        <div class="segmented" role="group" aria-label="빠른 선택">
+                            <button type="button" onclick="addMonths(1)">+1달</button>
+                            <button type="button" onclick="addMonths(2)">+2달</button>
+                            <button type="button" onclick="addMonths(3)">+3달</button>
+                        </div>
+                    </div>
                 </div>
-                <button type="submit">검색</button>
-                <a th:href="@{/dashboard/users}" style="padding:11px 16px;font-size:14px;color:#64748b;text-decoration:none;">초기화</a>
+                <div>
+                    <label for="maxDeviceCount">최대 PC 수(0 = 무제한)</label>
+                    <input type="number" id="maxDeviceCount" name="maxDeviceCount" value="1" min="0" style="min-width:80px;">
+                </div>
+                <button type="submit">토큰 생성</button>
             </div>
         </form>
     </div>
+
     <div class="card">
+        <form th:action="@{/dashboard/users}" method="get" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:18px 20px; margin-bottom:20px;">
+            <div class="form-row" style="justify-content:center; align-items:flex-end;">
+                <div>
+                    <input type="text" id="appName" name="appName" placeholder="앱 이름 검색" th:value="${appName}" style="min-width:200px; background:#fff;">
+                </div>
+                <div>
+                    <input type="text" id="tokenStr" name="tokenStr" placeholder="토큰 검색" th:value="${tokenStr}" style="min-width:220px; background:#fff;">
+                </div>
+                <button type="submit">검색</button>
+                <a th:href="@{/dashboard/users}" style="padding:11px 16px; height:42px; font-size:14px; color:#64748b; text-decoration:none; display:inline-flex; align-items:center;">초기화</a>
+            </div>
+        </form>
         <table>
             <thead>
                 <tr>
@@ -56,30 +105,25 @@
                     <td th:text="${token.id}"></td>
                     <td th:text="${token.application.name}"></td>
                     <td th:text="${token.tokenStr}"></td>
-                    <td>
-                        <form th:action="@{/dashboard/users/{id}/expire(id=${token.id})}" method="post" class="action-form">
-                            <input type="date" name="expireDate" class="inline"
-                                   th:value="${#temporals.format(token.expireDate, 'yyyy-MM-dd')}" required>
-                            <button type="submit" class="btn-save">저장</button>
-                        </form>
-                    </td>
-                    <td>
-                        <form th:action="@{/dashboard/users/{id}/maxDevices(id=${token.id})}" method="post" class="action-form">
-                            <input type="number" name="maxDeviceCount" class="inline"
-                                   th:value="${token.maxDeviceCount}" min="0" required>
-                            <button type="submit" class="btn-save">저장</button>
-                        </form>
-                    </td>
+                    <td th:text="${#temporals.format(token.expireDate, 'yyyy-MM-dd')}"></td>
+                    <td th:text="${token.maxDeviceCount == 0 ? '무제한' : token.maxDeviceCount}"></td>
                     <td>
                         <span th:if="${token.expireDate.isBefore(#temporals.createToday())}" class="badge badge-expired">만료</span>
                         <span th:unless="${token.expireDate.isBefore(#temporals.createToday())}" class="badge badge-ok">유효</span>
                     </td>
-                    <td style="display:flex; gap:6px; flex-wrap:wrap;">
-                        <a th:href="@{/dashboard/users/{id}/devices(id=${token.id})}" class="btn-device">기기 관리</a>
-                        <form th:action="@{/dashboard/users/{id}/delete(id=${token.id})}" method="post" class="action-form"
-                              onsubmit="return confirm('삭제하시겠습니까?')">
-                            <button type="submit" class="btn-delete">삭제</button>
-                        </form>
+                    <td>
+                        <div class="action-cell">
+                            <button type="button" class="btn-row btn-edit"
+                                    th:attr="data-id=${token.id},
+                                             data-expire=${#temporals.format(token.expireDate, 'yyyy-MM-dd')},
+                                             data-max=${token.maxDeviceCount}"
+                                    onclick="openEditModal(this)">수정</button>
+                            <a th:href="@{/dashboard/users/{id}/devices(id=${token.id})}" class="btn-row btn-device">기기 관리</a>
+                            <form th:action="@{/dashboard/users/{id}/delete(id=${token.id})}" method="post" class="action-form"
+                                  onsubmit="return confirm('삭제하시겠습니까?')">
+                                <button type="submit" class="btn-row btn-delete">삭제</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(tokens)}">
@@ -107,5 +151,57 @@
         </div>
     </div>
 </div>
+
+<div id="editModal" class="modal-backdrop" onclick="if (event.target === this) closeEditModal()">
+    <div class="modal">
+        <h3>사용자 정보 수정</h3>
+        <form id="editForm" method="post">
+            <div class="row">
+                <label for="editExpireDate">만료일</label>
+                <input type="date" id="editExpireDate" name="expireDate" required>
+            </div>
+            <div class="row">
+                <label for="editMaxDeviceCount">최대 PC 수</label>
+                <input type="number" id="editMaxDeviceCount" name="maxDeviceCount" min="0" required>
+                <div class="hint">0 = 무제한</div>
+            </div>
+            <div class="actions">
+                <button type="button" class="btn-cancel" onclick="closeEditModal()">취소</button>
+                <button type="submit" class="btn-submit">저장</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openEditModal(btn) {
+        const id = btn.dataset.id;
+        document.getElementById('editExpireDate').value = btn.dataset.expire;
+        document.getElementById('editMaxDeviceCount').value = btn.dataset.max;
+        document.getElementById('editForm').action = '/dashboard/users/' + id + '/update';
+        document.getElementById('editModal').classList.add('open');
+    }
+    function closeEditModal() {
+        document.getElementById('editModal').classList.remove('open');
+    }
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeEditModal();
+    });
+
+    function addMonths(n) {
+        const d = new Date();
+        d.setMonth(d.getMonth() + n);
+        d.setDate(d.getDate() + 1);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        document.getElementById('expireDate').value = `${yyyy}-${mm}-${dd}`;
+    }
+</script>
+<script th:if="${newToken != null}">
+    window.onload = function() {
+        alert('토큰이 생성되었습니다.\n\n애플리케이션: [[${newAppName}]]\n토큰: [[${newToken}]]\n만료일: [[${newExpireDate}]]');
+    };
+</script>
 </body>
 </html>

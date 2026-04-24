@@ -42,11 +42,10 @@
 <div th:fragment="sidebar(activePage)" class="sidebar">
     <div class="sidebar-title">Sentinel</div>
     <nav>
-        <a th:href="@{/dashboard/register}" th:classappend="${activePage == 'register'} ? ' active'">사용자/매니저 등록</a>
-        <a th:href="@{/dashboard/users}"    th:classappend="${activePage == 'users'}    ? ' active'">사용자 관리</a>
         <a th:href="@{/dashboard/apps}"     th:classappend="${activePage == 'apps'}     ? ' active'">애플리케이션 관리</a>
+        <a th:href="@{/dashboard/users}"    th:classappend="${activePage == 'users'}    ? ' active'">사용자 관리</a>
         <a th:href="@{/dashboard/history}"  th:classappend="${activePage == 'history'}  ? ' active'">사용자 히스토리</a>
-        <a th:href="@{/dashboard/apikeys}"  th:classappend="${activePage == 'apikeys'}  ? ' active'">매니저 API Key 관리</a>
+        <a th:href="@{/dashboard/apikeys}"  th:classappend="${activePage == 'apikeys'}  ? ' active'">매니저 관리</a>
     </nav>
     <div class="sidebar-footer">
         <a th:href="@{/logout}">로그아웃</a>
