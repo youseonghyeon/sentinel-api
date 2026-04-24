@@ -87,6 +87,7 @@
                     <th>토큰</th>
                     <th>만료일</th>
                     <th>최대 PC 수</th>
+                    <th>활성 PC 수</th>
                     <th>상태</th>
                     <th>관리</th>
                 </tr>
@@ -98,6 +99,7 @@
                     <td th:text="${token.tokenStr}"></td>
                     <td th:text="${#temporals.format(token.expireDate, 'yyyy-MM-dd')}"></td>
                     <td th:text="${token.maxDeviceCount == 0 ? '무제한' : token.maxDeviceCount}"></td>
+                    <td th:text="${activeCounts.getOrDefault(token.id, 0)}"></td>
                     <td>
                         <span th:if="${token.expireDate.isBefore(#temporals.createToday())}" class="badge badge-expired">만료</span>
                         <span th:unless="${token.expireDate.isBefore(#temporals.createToday())}" class="badge badge-ok">유효</span>
@@ -133,7 +135,7 @@
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(tokens)}">
-                    <td colspan="7" style="text-align:center; color:#94a3b8; padding: 24px;">등록된 사용자가 없습니다.</td>
+                    <td colspan="8" style="text-align:center; color:#94a3b8; padding: 24px;">등록된 사용자가 없습니다.</td>
                 </tr>
             </tbody>
         </table>

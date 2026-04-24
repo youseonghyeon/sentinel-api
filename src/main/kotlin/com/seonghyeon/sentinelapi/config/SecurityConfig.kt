@@ -34,6 +34,7 @@ class SecurityConfig {
                     "/actuator/**",
                     "/login",
                     "/download/**",
+                    "/css/**",
                 ).permitAll()
                 it.anyRequest().authenticated()
             }

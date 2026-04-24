@@ -5,7 +5,7 @@
     .docs-header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; padding: 28px 32px; border-radius: 14px; margin-bottom: 24px; }
     .docs-header h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: #fff; }
     .docs-header p { color: #cbd5e1; font-size: 14px; line-height: 1.6; }
-    .docs-header .base-url { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,0.08); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: #e2e8f0; margin-top: 12px; border: 1px solid rgba(255,255,255,0.12); }
+    .docs-header .base-url { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,0.08); font-family: var(--font-mono); font-size: 12px; color: #e2e8f0; margin-top: 12px; border: 1px solid rgba(255,255,255,0.12); }
 
     .group-title { font-size: 13px; font-weight: 700; color: #64748b; letter-spacing: 0.08em; text-transform: uppercase; margin: 20px 4px 10px; }
 
@@ -16,14 +16,14 @@
     .endpoint > summary:hover { background: #f8fafc; }
     .endpoint[open] > summary { border-bottom: 1px solid #e2e8f0; }
 
-    .method { display: inline-flex; align-items: center; justify-content: center; min-width: 64px; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #fff; letter-spacing: 0.04em; font-family: ui-monospace, monospace; }
+    .method { display: inline-flex; align-items: center; justify-content: center; min-width: 64px; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #fff; letter-spacing: 0.04em; font-family: var(--font-mono); }
     .method-get { background: #2563eb; }
     .method-post { background: #16a34a; }
     .method-delete { background: #dc2626; }
     .method-patch { background: #ea580c; }
     .method-put { background: #ca8a04; }
 
-    .path { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; color: #0f172a; font-weight: 500; flex-shrink: 0; }
+    .path { font-family: var(--font-mono); font-size: 14px; color: #0f172a; font-weight: 500; flex-shrink: 0; }
     .summary-text { color: #64748b; font-size: 13px; margin-left: auto; text-align: right; }
     .chev { color: #94a3b8; margin-left: 8px; transition: transform .15s ease; flex-shrink: 0; }
     .chev svg { width: 16px; height: 16px; }
@@ -38,18 +38,18 @@
     .param-table th { background: #f8fafc; padding: 8px 12px; text-align: left; font-weight: 600; color: #475569; font-size: 12px; border-bottom: 1px solid #e2e8f0; }
     .param-table td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; color: #334155; }
     .param-table tr:last-child td { border-bottom: none; }
-    .param-table td.mono { font-family: ui-monospace, monospace; color: #0f172a; font-weight: 500; width: 200px; }
+    .param-table td.mono { font-family: var(--font-mono); color: #0f172a; font-weight: 500; width: 200px; }
     .param-table td.req { width: 60px; }
     .req-yes { color: #dc2626; font-weight: 700; font-size: 12px; }
     .req-no { color: #94a3b8; font-size: 12px; }
 
-    pre.code { background: #0f172a; color: #e2e8f0; padding: 14px 16px; border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; line-height: 1.55; overflow-x: auto; margin-bottom: 10px; }
+    pre.code { background: #0f172a; color: #e2e8f0; padding: 14px 16px; border-radius: 8px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; overflow-x: auto; margin-bottom: 10px; }
     pre.code .k { color: #93c5fd; }
     pre.code .s { color: #86efac; }
     pre.code .c { color: #64748b; }
     pre.code .n { color: #fbbf24; }
 
-    .status { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; font-family: ui-monospace, monospace; letter-spacing: 0.02em; margin-bottom: 6px; }
+    .status { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; font-family: var(--font-mono); letter-spacing: 0.02em; margin-bottom: 6px; }
     .status-ok { background: #dcfce7; color: #166534; }
     .status-err { background: #fee2e2; color: #991b1b; }
 
@@ -59,7 +59,7 @@
     .error-table th, .error-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #e2e8f0; }
     .error-table thead tr { background: #f8fafc; }
     .error-table th { font-size: 12px; font-weight: 600; color: #475569; }
-    .error-table td.code-col { font-family: ui-monospace, monospace; font-weight: 600; color: #0f172a; width: 200px; }
+    .error-table td.code-col { font-family: var(--font-mono); font-weight: 600; color: #0f172a; width: 200px; }
     .error-table td.status-col { width: 80px; }
 
     .note { background: #eff6ff; border-left: 3px solid #2563eb; padding: 10px 14px; border-radius: 6px; font-size: 13px; color: #1e3a8a; margin-bottom: 16px; }
@@ -413,7 +413,7 @@
     </div>
 
     <p style="font-size:12px;color:#94a3b8;margin-top:16px;text-align:center;">
-        에러 응답 본문: <code style="font-family:ui-monospace,monospace;">{ "code": "ERROR_CODE", "message": "..." }</code>
+        에러 응답 본문: <code style="font-family:var(--font-mono);">{ "code": "ERROR_CODE", "message": "..." }</code>
     </p>
 </div>
 </body>

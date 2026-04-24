@@ -1,7 +1,9 @@
 package com.seonghyeon.sentinelapi.common.exception
 
+import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -64,10 +66,16 @@ class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoResourceFoundException::class)
-    fun handleNoResourceFound(e: NoResourceFoundException): ResponseEntity<ErrorResponse> {
+    fun handleNoResourceFound(e: NoResourceFoundException, request: HttpServletRequest): ResponseEntity<Any> {
         log.warn("No resource found: {} {}", e.httpMethod, e.resourcePath)
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(ErrorResponse(code = "NOT_FOUND", message = "요청한 리소스를 찾을 수 없습니다."))
+        val path = request.requestURI
+        if (path.startsWith("/api/") || path.startsWith("/actuator/")) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse(code = "NOT_FOUND", message = "요청한 리소스를 찾을 수 없습니다."))
+        }
+        return ResponseEntity.status(HttpStatus.FOUND)
+            .header(HttpHeaders.LOCATION, "/dashboard/apps")
+            .build()
     }
 
     @ExceptionHandler(Exception::class)

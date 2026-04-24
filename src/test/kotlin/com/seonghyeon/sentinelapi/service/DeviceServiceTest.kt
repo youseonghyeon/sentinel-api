@@ -253,4 +253,56 @@ class DeviceServiceTest : AbstractIntegrationTest() {
         assertThat(deviceRegistrationRepository.findByTokenIdAndDeviceId(token.id, "guid-stay")).isNotNull
         assertThat(deviceRegistrationRepository.countByTokenId(token.id)).isEqualTo(1)
     }
+
+    // ─── countByTokenIds ─────────────────────────────────────────────────────
+
+    @Test
+    fun `countByTokenIds - 각 토큰의 활성 기기 수를 Map으로 반환한다`() {
+        val app = givenApp()
+        val tokenA = givenToken(app, maxDeviceCount = 0)
+        val tokenB = givenToken(app, maxDeviceCount = 0)
+        givenDevice(tokenA, "guid-a1")
+        givenDevice(tokenA, "guid-a2")
+        givenDevice(tokenA, "guid-a3")
+        givenDevice(tokenB, "guid-b1")
+
+        val counts = deviceService.countByTokenIds(listOf(tokenA.id, tokenB.id))
+
+        assertThat(counts).containsEntry(tokenA.id, 3L)
+        assertThat(counts).containsEntry(tokenB.id, 1L)
+    }
+
+    @Test
+    fun `countByTokenIds - 기기가 없는 토큰은 맵에 포함되지 않는다`() {
+        val app = givenApp()
+        val tokenWithDevice = givenToken(app)
+        val tokenEmpty = givenToken(app)
+        givenDevice(tokenWithDevice, "guid-only")
+
+        val counts = deviceService.countByTokenIds(listOf(tokenWithDevice.id, tokenEmpty.id))
+
+        assertThat(counts).containsEntry(tokenWithDevice.id, 1L)
+        assertThat(counts).doesNotContainKey(tokenEmpty.id)
+    }
+
+    @Test
+    fun `countByTokenIds - 빈 컬렉션이면 빈 맵을 반환한다`() {
+        val counts = deviceService.countByTokenIds(emptyList())
+
+        assertThat(counts).isEmpty()
+    }
+
+    @Test
+    fun `countByTokenIds - 요청하지 않은 토큰의 기기 수는 집계되지 않는다`() {
+        val app = givenApp()
+        val tokenQueried = givenToken(app, maxDeviceCount = 0)
+        val tokenIgnored = givenToken(app, maxDeviceCount = 0)
+        givenDevice(tokenQueried, "guid-q")
+        givenDevice(tokenIgnored, "guid-i")
+
+        val counts = deviceService.countByTokenIds(listOf(tokenQueried.id))
+
+        assertThat(counts).containsOnlyKeys(tokenQueried.id)
+        assertThat(counts[tokenQueried.id]).isEqualTo(1L)
+    }
 }

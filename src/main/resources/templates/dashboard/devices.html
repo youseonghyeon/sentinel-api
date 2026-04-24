@@ -25,7 +25,7 @@
             </thead>
             <tbody>
                 <tr th:each="d : ${devices}">
-                    <td th:text="${d['deviceId']}" style="font-family:monospace; font-size:13px;"></td>
+                    <td th:text="${d['deviceId']}" style="font-family:var(--font-mono); font-size:13px;"></td>
                     <td th:text="${#temporals.format(d['registeredAtKst'], 'yyyy-MM-dd HH:mm:ss')}"></td>
                     <td th:text="${#temporals.format(d['lastSeenAtKst'], 'yyyy-MM-dd HH:mm:ss')}"></td>
                     <td>

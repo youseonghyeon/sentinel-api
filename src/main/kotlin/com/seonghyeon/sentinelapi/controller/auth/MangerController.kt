@@ -94,7 +94,9 @@ class MangerController(
     ): String {
         val pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "id"))
         val tokenPage = tokenAuthService.findPage(appName, tokenStr, pageable)
+        val activeCounts = deviceService.countByTokenIds(tokenPage.content.map { it.id })
         model.addAttribute("tokens", tokenPage.content)
+        model.addAttribute("activeCounts", activeCounts)
         model.addAttribute("apps", applicationService.findAll())
         model.addAttribute("appName", appName.orEmpty())
         model.addAttribute("tokenStr", tokenStr.orEmpty())

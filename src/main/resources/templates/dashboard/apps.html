@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head th:replace="~{fragments/layout :: head}"></head>
 <style>
-    .version-cell { font-family: monospace; font-size: 13px; color: #334155; }
+    .version-cell { font-family: var(--font-mono); font-size: 13px; color: #334155; }
     .version-cell.none { color: #cbd5e1; font-family: inherit; }
 </style>
 <body>
@@ -45,7 +45,7 @@
                 <tr th:each="app : ${apps}">
                     <td th:text="${app.id}"></td>
                     <td th:text="${app.name}"></td>
-                    <td th:text="${app.appId}" style="font-family:monospace;"></td>
+                    <td th:text="${app.appId}" style="font-family:var(--font-mono);"></td>
                     <td th:text="${app.description}"></td>
                     <td>
                         <span th:with="v=${latestVersions.get(app.id)}"

@@ -60,6 +60,12 @@ class DeviceService(
     fun findAllByToken(tokenId: Long): List<DeviceRegistration> =
         deviceRegistrationRepository.findByTokenId(tokenId)
 
+    fun countByTokenIds(tokenIds: Collection<Long>): Map<Long, Long> {
+        if (tokenIds.isEmpty()) return emptyMap()
+        return deviceRegistrationRepository.countByTokenIdIn(tokenIds)
+            .associate { it.tokenId to it.cnt }
+    }
+
     @Transactional
     fun remove(tokenId: Long, deviceId: String) {
         log.info("Device removed: tokenId={}, deviceId={}", tokenId, deviceId)
