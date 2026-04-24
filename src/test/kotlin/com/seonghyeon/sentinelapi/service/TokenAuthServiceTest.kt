@@ -129,53 +129,35 @@ class TokenAuthServiceTest : AbstractIntegrationTest() {
         assertThat(page.content).anyMatch { it.tokenStr == token.tokenStr }
     }
 
-    // --- updateExpireDate ---
+    // --- update ---
 
     @Test
-    fun `updateExpireDate - 만료일을 변경한다`() {
+    fun `update - 만료일과 최대 PC 수를 함께 변경한다`() {
         val app = givenApp()
-        val token = tokenAuthService.generate(app.id, LocalDate.now().plusDays(30))
+        val token = tokenAuthService.generate(app.id, LocalDate.now().plusDays(30), maxDeviceCount = 1)
         val newDate = LocalDate.now().plusDays(60)
 
-        tokenAuthService.updateExpireDate(token.id, newDate)
+        tokenAuthService.update(token.id, newDate, 5)
 
         val updated = tokenRepository.findById(token.id).orElseThrow()
         assertThat(updated.expireDate).isEqualTo(newDate)
-    }
-
-    @Test
-    fun `updateExpireDate - 존재하지 않는 토큰이면 INVALID_TOKEN`() {
-        val ex = assertThrows<SentinelException> { tokenAuthService.updateExpireDate(99999L, LocalDate.now().plusDays(10)) }
-        assertThat(ex.errorCode).isEqualTo(ErrorCode.INVALID_TOKEN)
-    }
-
-    // --- updateMaxDeviceCount ---
-
-    @Test
-    fun `updateMaxDeviceCount - 최대 PC 수를 변경한다`() {
-        val app = givenApp()
-        val token = tokenAuthService.generate(app.id, LocalDate.now().plusDays(30), maxDeviceCount = 1)
-
-        tokenAuthService.updateMaxDeviceCount(token.id, 5)
-
-        val updated = tokenRepository.findById(token.id).orElseThrow()
         assertThat(updated.maxDeviceCount).isEqualTo(5)
     }
 
     @Test
-    fun `updateMaxDeviceCount - 0으로 변경하면 무제한이 된다`() {
+    fun `update - 최대 PC 수를 0으로 변경하면 무제한이 된다`() {
         val app = givenApp()
         val token = tokenAuthService.generate(app.id, LocalDate.now().plusDays(30), maxDeviceCount = 1)
 
-        tokenAuthService.updateMaxDeviceCount(token.id, 0)
+        tokenAuthService.update(token.id, token.expireDate, 0)
 
         val updated = tokenRepository.findById(token.id).orElseThrow()
         assertThat(updated.maxDeviceCount).isEqualTo(0)
     }
 
     @Test
-    fun `updateMaxDeviceCount - 존재하지 않는 토큰이면 INVALID_TOKEN`() {
-        val ex = assertThrows<SentinelException> { tokenAuthService.updateMaxDeviceCount(99999L, 3) }
+    fun `update - 존재하지 않는 토큰이면 INVALID_TOKEN`() {
+        val ex = assertThrows<SentinelException> { tokenAuthService.update(99999L, LocalDate.now().plusDays(10), 3) }
         assertThat(ex.errorCode).isEqualTo(ErrorCode.INVALID_TOKEN)
     }
 
