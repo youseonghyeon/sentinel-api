@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Sentinel · 다운로드</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: sans-serif; background: #f1f5f9; min-height: 100vh; color: #1e293b; }
+        .wrap { max-width: 640px; margin: 48px auto; padding: 0 20px; }
+        .brand { font-size: 14px; font-weight: 600; color: #64748b; letter-spacing: 0.08em; margin-bottom: 12px; }
+        .app-card { background: #fff; border-radius: 10px; padding: 24px 28px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); margin-bottom: 20px; }
+        .app-name { font-size: 22px; font-weight: bold; margin-bottom: 6px; }
+        .app-desc { color: #64748b; font-size: 14px; margin-bottom: 16px; }
+        .app-id { font-family: monospace; font-size: 12px; color: #94a3b8; }
+        .token-section { background: #fff; border-radius: 10px; padding: 20px 28px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); margin-bottom: 20px; }
+        .token-section label { display: block; font-size: 13px; color: #475569; margin-bottom: 8px; font-weight: 500; }
+        .token-section input { width: 100%; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; font-family: monospace; }
+        .token-section input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+        .version-card { background: #fff; border-radius: 10px; padding: 20px 28px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); margin-bottom: 16px; display: flex; align-items: center; gap: 20px; }
+        .version-info { flex: 1; min-width: 0; }
+        .version-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .version-num { font-size: 18px; font-weight: 600; }
+        .latest-badge { padding: 2px 8px; background: #dcfce7; color: #166534; border-radius: 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
+        .version-filename { font-size: 14px; color: #334155; margin-bottom: 6px; word-break: break-all; }
+        .version-meta { font-size: 12px; color: #64748b; display: flex; flex-wrap: wrap; gap: 14px; }
+        .version-meta .mono { font-family: monospace; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
+        .changelog { margin-top: 10px; font-size: 13px; color: #475569; background: #f8fafc; padding: 8px 12px; border-radius: 6px; white-space: pre-wrap; }
+        .btn-download { padding: 10px 18px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; height: 42px; flex-shrink: 0; }
+        .btn-download:hover { background: #1d4ed8; }
+        .error { background: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+        .empty { text-align: center; color: #94a3b8; padding: 48px 20px; background: #fff; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="brand">SENTINEL · DOWNLOAD</div>
+
+    <div th:if="${notFound}" class="app-card">
+        <div class="app-name">애플리케이션을 찾을 수 없습니다</div>
+        <div class="app-desc">요청하신 애플리케이션 ID가 존재하지 않습니다.</div>
+        <div class="app-id" th:text="${appIdInput}"></div>
+    </div>
+
+    <div th:unless="${notFound}">
+        <div class="app-card">
+            <div class="app-name" th:text="${app.name}"></div>
+            <div class="app-desc" th:if="${app.description != null and !#strings.isEmpty(app.description)}" th:text="${app.description}"></div>
+            <div class="app-id" th:text="${app.appId}"></div>
+        </div>
+
+        <div th:if="${error}" class="error" th:text="${error}"></div>
+
+        <div class="token-section">
+            <label for="token">토큰</label>
+            <input type="text" id="token" placeholder="발급받은 토큰을 입력하세요" autocomplete="off">
+        </div>
+
+        <div th:if="${#lists.isEmpty(files)}" class="empty">아직 업로드된 파일이 없습니다.</div>
+
+        <form th:each="f : ${files}"
+              th:action="@{/download/{appId}/{version}(appId=${app.appId}, version=${f.version})}"
+              method="post"
+              onsubmit="return attachToken(this)">
+            <input type="hidden" name="token">
+            <div class="version-card">
+                <div class="version-info">
+                    <div class="version-head">
+                        <div class="version-num" th:text="${f.version}"></div>
+                        <span th:if="${f.isLatest}" class="latest-badge">LATEST</span>
+                    </div>
+                    <div class="version-filename" th:text="${f.filename}"></div>
+                    <div class="version-meta">
+                        <span th:text="${#numbers.formatInteger(f.sizeBytes, 0, 'COMMA')} + ' B'"></span>
+                        <span>SHA-256 <span class="mono" th:text="${f.sha256}" th:title="${f.sha256}"></span></span>
+                        <span th:text="${#temporals.format(f.uploadedAt.atZone(T(java.time.ZoneOffset).UTC).withZoneSameInstant(T(java.time.ZoneId).of('Asia/Seoul')).toLocalDateTime(), 'yyyy-MM-dd HH:mm')} + ' KST'"></span>
+                    </div>
+                    <div th:if="${f.changelog != null and !#strings.isEmpty(f.changelog)}" class="changelog" th:text="${f.changelog}"></div>
+                </div>
+                <button type="submit" class="btn-download">다운로드</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function attachToken(form) {
+        const token = document.getElementById('token').value.trim();
+        if (!token) {
+            alert('토큰을 입력해주세요.');
+            return false;
+        }
+        form.querySelector('input[name=token]').value = token;
+        return true;
+    }
+</script>
+</body>
+</html>

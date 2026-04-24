@@ -33,6 +33,7 @@ class SecurityConfig {
                     "/api/v1/manager/**",
                     "/actuator/**",
                     "/login",
+                    "/download/**",
                 ).permitAll()
                 it.anyRequest().authenticated()
             }
