@@ -44,3 +44,12 @@ management:
       show-details: when-authorized
       probes:
         enabled: true
+
+logging:
+  structured:
+    format:
+      console: ${LOG_FORMAT:ecs}
+  include-application-name: true
+  level:
+    com.seonghyeon.sentinelapi: INFO
+    org.hibernate.orm.jdbc.bind: WARN
