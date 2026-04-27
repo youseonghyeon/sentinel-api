@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: "epfzja/sentinel-api"
   pullPolicy: IfNotPresent
-  tag: "77ed477af2e7813335d7e5ad6b663cac6906c711"
+  tag: "01889f789fe3b00320c256a3a3068c27a4918f49"
 
 imagePullSecrets: []
 nameOverride: ""
