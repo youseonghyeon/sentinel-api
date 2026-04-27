@@ -3,6 +3,7 @@ package com.seonghyeon.sentinelapi.service
 import com.seonghyeon.sentinelapi.domain.LoginHistory
 import com.seonghyeon.sentinelapi.repository.AppRepository
 import com.seonghyeon.sentinelapi.repository.LoginHistoryRepository
+import com.seonghyeon.sentinelapi.utils.masked
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -16,7 +17,7 @@ class LoginHistoryService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun save(loginHistory: LoginHistory): LoginHistory {
-        log.info("Saving login history: appId={}, ip={}, token={}", loginHistory.appId, loginHistory.ip, loginHistory.token)
+        log.info("Saving login history: appId={}, ip={}, token={}", loginHistory.appId, loginHistory.ip, loginHistory.token.masked())
         return loginHistoryRepository.save(loginHistory)
     }
 

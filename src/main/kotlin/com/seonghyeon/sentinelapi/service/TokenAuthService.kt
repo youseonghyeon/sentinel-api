@@ -5,6 +5,7 @@ import com.seonghyeon.sentinelapi.common.exception.SentinelException
 import com.seonghyeon.sentinelapi.domain.Token
 import com.seonghyeon.sentinelapi.repository.AppRepository
 import com.seonghyeon.sentinelapi.repository.TokenRepository
+import com.seonghyeon.sentinelapi.utils.masked
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -21,19 +22,19 @@ class TokenAuthService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun check(tokenStr: String, clientId: Long): Token {
-        log.info("Token check: token={}, clientId={}", tokenStr, clientId)
+        log.info("Token check: token={}, clientId={}", tokenStr.masked(), clientId)
         val token = tokenRepository.findByTokenStrAndApplicationId(tokenStr, clientId)
             ?: run {
-                log.warn("Token not found: token={}, clientId={}", tokenStr, clientId)
+                log.warn("Token not found: token={}, clientId={}", tokenStr.masked(), clientId)
                 throw SentinelException(ErrorCode.INVALID_TOKEN)
             }
 
         if (token.expireDate.isBefore(LocalDate.now(ZoneId.of("Asia/Seoul")))) {
-            log.warn("Token expired: token={}, expireDate={}", tokenStr, token.expireDate)
+            log.warn("Token expired: token={}, expireDate={}", tokenStr.masked(), token.expireDate)
             throw SentinelException(ErrorCode.EXPIRED_TOKEN)
         }
 
-        log.info("Token valid: token={}, clientId={}", tokenStr, clientId)
+        log.info("Token valid: token={}, clientId={}", tokenStr.masked(), clientId)
         return token
     }
 
