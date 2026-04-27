@@ -4,7 +4,7 @@ import com.seonghyeon.sentinelapi.service.FeedbackService
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ModelAttribute
 
-@ControllerAdvice(basePackages = ["com.seonghyeon.sentinelapi.controller.auth"])
+@ControllerAdvice(annotations = [DashboardSidebar::class])
 class SidebarModelAdvice(
     private val feedbackService: FeedbackService,
 ) {

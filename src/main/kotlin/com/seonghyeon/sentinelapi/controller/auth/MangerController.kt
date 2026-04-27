@@ -1,6 +1,7 @@
 package com.seonghyeon.sentinelapi.controller.auth
 
 import com.seonghyeon.sentinelapi.common.exception.SentinelException
+import com.seonghyeon.sentinelapi.controller.DashboardSidebar
 import com.seonghyeon.sentinelapi.controller.auth.dto.LoginHistoryView
 import com.seonghyeon.sentinelapi.domain.FeedbackStatus
 import com.seonghyeon.sentinelapi.service.ApiKeyService
@@ -26,6 +27,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 @Controller
+@DashboardSidebar
 class MangerController(
     private val tokenAuthService: TokenAuthService,
     private val managerService: ManagerService,

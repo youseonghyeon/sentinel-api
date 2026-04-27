@@ -156,9 +156,9 @@ class TokenAuthServiceTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `update - 존재하지 않는 토큰이면 INVALID_TOKEN`() {
+    fun `update - 존재하지 않는 토큰이면 TOKEN_NOT_FOUND`() {
         val ex = assertThrows<SentinelException> { tokenAuthService.update(99999L, LocalDate.now().plusDays(10), 3) }
-        assertThat(ex.errorCode).isEqualTo(ErrorCode.INVALID_TOKEN)
+        assertThat(ex.errorCode).isEqualTo(ErrorCode.TOKEN_NOT_FOUND)
     }
 
     // --- delete ---

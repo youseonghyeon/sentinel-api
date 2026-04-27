@@ -458,7 +458,11 @@
             </div>
             <div class="response">
                 <span class="status status-err">401 INVALID_APPLICATION</span>
-                <p style="font-size:13px;color:#64748b;">요청한 <code>appId</code>가 존재하지 않거나 <code>maxDeviceCount</code>가 음수</p>
+                <p style="font-size:13px;color:#64748b;">요청한 <code>appId</code>가 존재하지 않음</p>
+            </div>
+            <div class="response">
+                <span class="status status-err">400 VALIDATION_ERROR</span>
+                <p style="font-size:13px;color:#64748b;"><code>maxDeviceCount</code>가 음수</p>
             </div>
 
             <h4>cURL</h4>
@@ -517,7 +521,7 @@
 }</pre>
             </div>
             <div class="response">
-                <span class="status status-err">401 INVALID_APPLICATION</span>
+                <span class="status status-err">404 APP_NOT_FOUND</span>
                 <p style="font-size:13px;color:#64748b;"><code>appId</code> 파라미터가 존재하지 않는 앱을 가리킴</p>
             </div>
         </div>
@@ -543,7 +547,7 @@
                 <p style="font-size:13px;color:#64748b;">목록 응답의 <code>content[]</code> 항목과 동일한 구조</p>
             </div>
             <div class="response">
-                <span class="status status-err">401 INVALID_TOKEN</span>
+                <span class="status status-err">404 TOKEN_NOT_FOUND</span>
                 <p style="font-size:13px;color:#64748b;">해당 ID 의 토큰이 없음</p>
             </div>
         </div>
@@ -579,7 +583,7 @@
                 <p style="font-size:13px;color:#64748b;">갱신된 토큰 (TokenView)</p>
             </div>
             <div class="response">
-                <span class="status status-err">401 INVALID_TOKEN</span>
+                <span class="status status-err">404 TOKEN_NOT_FOUND</span>
                 <p style="font-size:13px;color:#64748b;">해당 ID 의 토큰이 없음</p>
             </div>
         </div>
@@ -599,7 +603,7 @@
                 <span class="status status-ok">204 No Content</span>
             </div>
             <div class="response">
-                <span class="status status-err">401 INVALID_TOKEN</span>
+                <span class="status status-err">404 TOKEN_NOT_FOUND</span>
                 <p style="font-size:13px;color:#64748b;">해당 ID 의 토큰이 없음</p>
             </div>
         </div>
@@ -626,7 +630,7 @@
 ]</pre>
             </div>
             <div class="response">
-                <span class="status status-err">401 INVALID_TOKEN</span>
+                <span class="status status-err">404 TOKEN_NOT_FOUND</span>
             </div>
         </div>
     </details>
@@ -645,7 +649,7 @@
                 <span class="status status-ok">204 No Content</span>
             </div>
             <div class="response">
-                <span class="status status-err">401 INVALID_TOKEN</span>
+                <span class="status status-err">404 TOKEN_NOT_FOUND</span>
             </div>
         </div>
     </details>
@@ -703,7 +707,7 @@
                 <p style="font-size:13px;color:#64748b;">목록 응답 항목과 동일</p>
             </div>
             <div class="response">
-                <span class="status status-err">401 INVALID_APPLICATION</span>
+                <span class="status status-err">400 VALIDATION_ERROR</span>
                 <p style="font-size:13px;color:#64748b;"><code>name</code>이 비어 있음</p>
             </div>
         </div>
@@ -723,7 +727,7 @@
                 <span class="status status-ok">204 No Content</span>
             </div>
             <div class="response">
-                <span class="status status-err">401 INVALID_APPLICATION</span>
+                <span class="status status-err">404 APP_NOT_FOUND</span>
                 <p style="font-size:13px;color:#64748b;">해당 ID 의 앱이 없음</p>
             </div>
         </div>
@@ -789,6 +793,11 @@
                 <tr><td class="code-col">INVALID_VERSION</td><td class="status-col">404</td><td>요청한 버전을 찾을 수 없습니다.</td></tr>
                 <tr><td class="code-col">FILE_NOT_FOUND</td><td class="status-col">404</td><td>파일을 찾을 수 없습니다.</td></tr>
                 <tr><td class="code-col">INVALID_API_KEY</td><td class="status-col">401</td><td>유효하지 않은 API 키입니다.</td></tr>
+                <tr><td class="code-col">VALIDATION_ERROR</td><td class="status-col">400</td><td>입력값이 올바르지 않습니다.</td></tr>
+                <tr><td class="code-col">NOT_FOUND</td><td class="status-col">404</td><td>요청한 리소스를 찾을 수 없습니다.</td></tr>
+                <tr><td class="code-col">TOKEN_NOT_FOUND</td><td class="status-col">404</td><td>해당 토큰을 찾을 수 없습니다.</td></tr>
+                <tr><td class="code-col">APP_NOT_FOUND</td><td class="status-col">404</td><td>해당 애플리케이션을 찾을 수 없습니다.</td></tr>
+                <tr><td class="code-col">RATE_LIMITED</td><td class="status-col">429</td><td>요청이 너무 잦습니다.</td></tr>
             </tbody>
         </table>
     </div>

@@ -97,7 +97,7 @@ class ManagerApiControllerTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `create user - 음수 maxDeviceCount는 401 INVALID_APPLICATION`() {
+    fun `create user - 음수 maxDeviceCount는 400 VALIDATION_ERROR`() {
         val app = givenApp("app_mgr_neg")
         val key = apiKey()
 
@@ -107,8 +107,8 @@ class ManagerApiControllerTest : AbstractIntegrationTest() {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""{"appId":"${app.appId}","expireDate":"$expireDate","maxDeviceCount":-1}""")
         )
-            .andExpect(status().isUnauthorized)
-            .andExpect(jsonPath("$.code").value("INVALID_APPLICATION"))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
     }
 
     @Test
@@ -191,14 +191,14 @@ class ManagerApiControllerTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `list users - 존재하지 않는 appId 필터는 401 INVALID_APPLICATION`() {
+    fun `list users - 존재하지 않는 appId 필터는 404 APP_NOT_FOUND`() {
         mockMvc.perform(
             get("/api/v1/manager/users")
                 .header("X-Api-Key", apiKey())
                 .param("appId", "app_doesnotexist")
         )
-            .andExpect(status().isUnauthorized)
-            .andExpect(jsonPath("$.code").value("INVALID_APPLICATION"))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.code").value("APP_NOT_FOUND"))
     }
 
     // ─── GET /users/{id} ────────────────────────────────────────────────────
@@ -218,13 +218,13 @@ class ManagerApiControllerTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `get user - 없는 ID면 401 INVALID_TOKEN`() {
+    fun `get user - 없는 ID면 404 TOKEN_NOT_FOUND`() {
         mockMvc.perform(
             get("/api/v1/manager/users/999999")
                 .header("X-Api-Key", apiKey())
         )
-            .andExpect(status().isUnauthorized)
-            .andExpect(jsonPath("$.code").value("INVALID_TOKEN"))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.code").value("TOKEN_NOT_FOUND"))
     }
 
     // ─── PATCH /users/{id} ──────────────────────────────────────────────────
@@ -267,7 +267,7 @@ class ManagerApiControllerTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `update user - 음수 maxDeviceCount는 401 INVALID_APPLICATION`() {
+    fun `update user - 음수 maxDeviceCount는 400 VALIDATION_ERROR`() {
         val app = givenApp("app_patch_neg")
         val token = givenToken(app, "tok-patch-3")
 
@@ -277,8 +277,8 @@ class ManagerApiControllerTest : AbstractIntegrationTest() {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""{"maxDeviceCount":-1}""")
         )
-            .andExpect(status().isUnauthorized)
-            .andExpect(jsonPath("$.code").value("INVALID_APPLICATION"))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
     }
 
     // ─── DELETE /users/{id} ─────────────────────────────────────────────────
@@ -297,13 +297,13 @@ class ManagerApiControllerTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `delete user - 없는 ID면 401 INVALID_TOKEN`() {
+    fun `delete user - 없는 ID면 404 TOKEN_NOT_FOUND`() {
         mockMvc.perform(
             delete("/api/v1/manager/users/999999")
                 .header("X-Api-Key", apiKey())
         )
-            .andExpect(status().isUnauthorized)
-            .andExpect(jsonPath("$.code").value("INVALID_TOKEN"))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.code").value("TOKEN_NOT_FOUND"))
     }
 
     // ─── GET /users/{id}/devices ────────────────────────────────────────────
@@ -325,13 +325,13 @@ class ManagerApiControllerTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `list devices - 없는 토큰이면 401 INVALID_TOKEN`() {
+    fun `list devices - 없는 토큰이면 404 TOKEN_NOT_FOUND`() {
         mockMvc.perform(
             get("/api/v1/manager/users/999999/devices")
                 .header("X-Api-Key", apiKey())
         )
-            .andExpect(status().isUnauthorized)
-            .andExpect(jsonPath("$.code").value("INVALID_TOKEN"))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.code").value("TOKEN_NOT_FOUND"))
     }
 
     // ─── DELETE /users/{id}/devices/{deviceId} ──────────────────────────────
@@ -385,15 +385,15 @@ class ManagerApiControllerTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `create app - 이름이 비면 401 INVALID_APPLICATION`() {
+    fun `create app - 이름이 비면 400 VALIDATION_ERROR`() {
         mockMvc.perform(
             post("/api/v1/manager/apps")
                 .header("X-Api-Key", apiKey())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""{"name":"","description":""}""")
         )
-            .andExpect(status().isUnauthorized)
-            .andExpect(jsonPath("$.code").value("INVALID_APPLICATION"))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
     }
 
     // ─── DELETE /apps/{id} ──────────────────────────────────────────────────
@@ -411,13 +411,13 @@ class ManagerApiControllerTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `delete app - 없는 앱이면 401 INVALID_APPLICATION`() {
+    fun `delete app - 없는 앱이면 404 APP_NOT_FOUND`() {
         mockMvc.perform(
             delete("/api/v1/manager/apps/999999")
                 .header("X-Api-Key", apiKey())
         )
-            .andExpect(status().isUnauthorized)
-            .andExpect(jsonPath("$.code").value("INVALID_APPLICATION"))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.code").value("APP_NOT_FOUND"))
     }
 
     // ─── GET /login-histories ───────────────────────────────────────────────

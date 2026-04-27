@@ -36,7 +36,7 @@ class ManagerApiController(
     fun createUser(@RequestBody request: CreateUserRequest): ResponseEntity<TokenView> {
         val clientId = applicationService.resolveClientId(request.appId)
         val maxDeviceCount = (request.maxDeviceCount ?: 1).also {
-            if (it < 0) throw SentinelException(ErrorCode.INVALID_APPLICATION)
+            if (it < 0) throw SentinelException(ErrorCode.VALIDATION_ERROR)
         }
         val token = tokenAuthService.generate(clientId, request.expireDate, maxDeviceCount)
         return ResponseEntity.ok(TokenView.from(token))
@@ -52,7 +52,7 @@ class ManagerApiController(
         val pageable = PageRequest.of(page.coerceAtLeast(0), size.coerceIn(1, 200), Sort.by(Sort.Direction.DESC, "id"))
         val resultPage = when {
             !appId.isNullOrBlank() -> {
-                val app = appRepository.findByAppId(appId) ?: throw SentinelException(ErrorCode.INVALID_APPLICATION)
+                val app = appRepository.findByAppId(appId) ?: throw SentinelException(ErrorCode.APP_NOT_FOUND)
                 if (!q.isNullOrBlank()) tokenRepository.findByApplication_IdAndTokenStrContainingIgnoreCase(app.id, q, pageable)
                 else tokenRepository.findByApplication_Id(app.id, pageable)
             }
@@ -64,7 +64,7 @@ class ManagerApiController(
 
     @GetMapping("/users/{tokenId}")
     fun getUser(@PathVariable tokenId: Long): ResponseEntity<TokenView> {
-        val token = tokenRepository.findById(tokenId).orElseThrow { SentinelException(ErrorCode.INVALID_TOKEN) }
+        val token = tokenRepository.findById(tokenId).orElseThrow { SentinelException(ErrorCode.TOKEN_NOT_FOUND) }
         return ResponseEntity.ok(TokenView.from(token))
     }
 
@@ -73,18 +73,17 @@ class ManagerApiController(
         @PathVariable tokenId: Long,
         @RequestBody request: UpdateUserRequest,
     ): ResponseEntity<TokenView> {
-        val token = tokenRepository.findById(tokenId).orElseThrow { SentinelException(ErrorCode.INVALID_TOKEN) }
+        val token = tokenRepository.findById(tokenId).orElseThrow { SentinelException(ErrorCode.TOKEN_NOT_FOUND) }
         val newExpire = request.expireDate ?: token.expireDate
         val newMax = request.maxDeviceCount ?: token.maxDeviceCount
-        if (newMax < 0) throw SentinelException(ErrorCode.INVALID_APPLICATION)
-        tokenAuthService.update(tokenId, newExpire, newMax)
-        val updated = tokenRepository.findById(tokenId).orElseThrow { SentinelException(ErrorCode.INVALID_TOKEN) }
+        if (newMax < 0) throw SentinelException(ErrorCode.VALIDATION_ERROR)
+        val updated = tokenAuthService.update(tokenId, newExpire, newMax)
         return ResponseEntity.ok(TokenView.from(updated))
     }
 
     @DeleteMapping("/users/{tokenId}")
     fun deleteUser(@PathVariable tokenId: Long): ResponseEntity<Void> {
-        if (!tokenRepository.existsById(tokenId)) throw SentinelException(ErrorCode.INVALID_TOKEN)
+        if (!tokenRepository.existsById(tokenId)) throw SentinelException(ErrorCode.TOKEN_NOT_FOUND)
         tokenAuthService.delete(tokenId)
         return ResponseEntity.noContent().build()
     }
@@ -93,7 +92,7 @@ class ManagerApiController(
 
     @GetMapping("/users/{tokenId}/devices")
     fun listDevices(@PathVariable tokenId: Long): ResponseEntity<List<DeviceItem>> {
-        if (!tokenRepository.existsById(tokenId)) throw SentinelException(ErrorCode.INVALID_TOKEN)
+        if (!tokenRepository.existsById(tokenId)) throw SentinelException(ErrorCode.TOKEN_NOT_FOUND)
         return ResponseEntity.ok(deviceService.findAllByToken(tokenId).map(DeviceItem::from))
     }
 
@@ -102,7 +101,7 @@ class ManagerApiController(
         @PathVariable tokenId: Long,
         @PathVariable deviceId: String,
     ): ResponseEntity<Void> {
-        if (!tokenRepository.existsById(tokenId)) throw SentinelException(ErrorCode.INVALID_TOKEN)
+        if (!tokenRepository.existsById(tokenId)) throw SentinelException(ErrorCode.TOKEN_NOT_FOUND)
         deviceService.remove(tokenId, deviceId)
         return ResponseEntity.noContent().build()
     }
@@ -115,14 +114,14 @@ class ManagerApiController(
 
     @PostMapping("/apps")
     fun createApp(@RequestBody request: CreateAppRequest): ResponseEntity<AppView> {
-        if (request.name.isBlank()) throw SentinelException(ErrorCode.INVALID_APPLICATION)
+        if (request.name.isBlank()) throw SentinelException(ErrorCode.VALIDATION_ERROR)
         val app = applicationService.register(request.name, request.description ?: "")
         return ResponseEntity.ok(AppView.from(app))
     }
 
     @DeleteMapping("/apps/{id}")
     fun deleteApp(@PathVariable id: Long): ResponseEntity<Void> {
-        if (!appRepository.existsById(id)) throw SentinelException(ErrorCode.INVALID_APPLICATION)
+        if (!appRepository.existsById(id)) throw SentinelException(ErrorCode.APP_NOT_FOUND)
         applicationService.delete(id)
         return ResponseEntity.noContent().build()
     }

@@ -5,6 +5,11 @@ import org.springframework.http.HttpStatus
 class SentinelException(val errorCode: ErrorCode) : RuntimeException(errorCode.message)
 
 enum class ErrorCode(val status: HttpStatus, val message: String) {
+    // Common
+    VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "입력값이 올바르지 않습니다."),
+    NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 리소스를 찾을 수 없습니다."),
+    RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요."),
+
     // Client
     INVALID_APPLICATION(HttpStatus.UNAUTHORIZED, "유효하지 않은 애플리케이션 키입니다."),
 
@@ -15,6 +20,8 @@ enum class ErrorCode(val status: HttpStatus, val message: String) {
     // Manager
     MANAGER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
     INVALID_API_KEY(HttpStatus.UNAUTHORIZED, "유효하지 않은 API 키입니다."),
+    TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 토큰을 찾을 수 없습니다."),
+    APP_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 애플리케이션을 찾을 수 없습니다."),
 
     // Device
     DEVICE_ID_REQUIRED(HttpStatus.BAD_REQUEST, "PC 식별 정보가 필요합니다."),

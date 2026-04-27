@@ -4,6 +4,7 @@ import com.seonghyeon.sentinelapi.common.exception.SentinelException
 import com.seonghyeon.sentinelapi.domain.FeedbackKind
 import com.seonghyeon.sentinelapi.service.AppFileService
 import com.seonghyeon.sentinelapi.service.ApplicationService
+import com.seonghyeon.sentinelapi.service.FeedbackRateLimiter
 import com.seonghyeon.sentinelapi.service.FeedbackService
 import com.seonghyeon.sentinelapi.service.TokenAuthService
 import com.seonghyeon.sentinelapi.utils.clientIp
@@ -30,6 +31,7 @@ class DownloadController(
     private val tokenAuthService: TokenAuthService,
     private val appFileService: AppFileService,
     private val feedbackService: FeedbackService,
+    private val feedbackRateLimiter: FeedbackRateLimiter,
 ) {
 
     @GetMapping("/{appId}")
@@ -102,9 +104,20 @@ class DownloadController(
         redirectAttributes: RedirectAttributes,
     ): String {
         val app = applicationService.findByAppId(appId)
-        if (app == null) {
+            ?: return "redirect:/download/$appId"
+
+        val ip = request.clientIp()
+        if (!feedbackRateLimiter.tryAcquire(ip)) {
+            redirectAttributes.addFlashAttribute("feedbackError", "요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.")
             return "redirect:/download/$appId"
         }
+
+        val parsedKind = runCatching { FeedbackKind.valueOf(kind.uppercase()) }.getOrNull()
+        if (parsedKind == null) {
+            redirectAttributes.addFlashAttribute("feedbackError", "올바른 종류를 선택해 주세요.")
+            return "redirect:/download/$appId"
+        }
+
         val trimmed = message.trim()
         if (trimmed.length < 5) {
             redirectAttributes.addFlashAttribute("feedbackError", "내용은 5자 이상 입력해주세요.")
@@ -114,13 +127,13 @@ class DownloadController(
             redirectAttributes.addFlashAttribute("feedbackError", "내용은 4000자 이내로 입력해주세요.")
             return "redirect:/download/$appId"
         }
-        val parsedKind = runCatching { FeedbackKind.valueOf(kind.uppercase()) }.getOrDefault(FeedbackKind.BUG)
+
         feedbackService.submit(
             appId = app.appId,
             kind = parsedKind,
             message = trimmed,
             contact = contact?.trim()?.takeIf { it.isNotBlank() },
-            ip = request.clientIp(),
+            ip = ip,
         )
         redirectAttributes.addFlashAttribute("feedbackOk", true)
         return "redirect:/download/$appId"

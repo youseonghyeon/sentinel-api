@@ -5,8 +5,10 @@ import com.seonghyeon.sentinelapi.domain.App
 import com.seonghyeon.sentinelapi.domain.FeedbackStatus
 import com.seonghyeon.sentinelapi.repository.AppRepository
 import com.seonghyeon.sentinelapi.repository.FeedbackRepository
+import com.seonghyeon.sentinelapi.service.FeedbackRateLimiter
 import com.seonghyeon.sentinelapi.service.FeedbackService
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.test.context.support.WithMockUser
@@ -21,6 +23,12 @@ class FeedbackTest : AbstractIntegrationTest() {
     @Autowired lateinit var appRepository: AppRepository
     @Autowired lateinit var feedbackRepository: FeedbackRepository
     @Autowired lateinit var feedbackService: FeedbackService
+    @Autowired lateinit var feedbackRateLimiter: FeedbackRateLimiter
+
+    @BeforeEach
+    fun resetRateLimiter() {
+        feedbackRateLimiter.reset()
+    }
 
     private fun givenApp(appId: String = "app_fb_test"): App =
         appRepository.save(App(id = 0, name = "FB-App", description = "", appId = appId))
@@ -37,7 +45,6 @@ class FeedbackTest : AbstractIntegrationTest() {
                 .param("kind", "BUG")
                 .param("message", "다운로드 후 실행하면 즉시 종료됩니다.")
                 .param("contact", "user@example.com")
-                .with { it.also { _ -> } }
         )
             .andExpect(status().is3xxRedirection)
             .andExpect(redirectedUrl("/download/${app.appId}"))
@@ -80,8 +87,33 @@ class FeedbackTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `feedback 제출 - 잘못된 kind 값은 BUG으로 저장`() {
+    fun `feedback 제출 - 동일 IP에서 분당 한도 초과 시 거부된다`() {
+        val app = givenApp("app_fb_rate")
+        feedbackRepository.deleteAll()
+
+        repeat(5) {
+            mockMvc.perform(
+                post("/download/${app.appId}/feedback")
+                    .param("kind", "BUG")
+                    .param("message", "rate limit body $it")
+            ).andExpect(status().is3xxRedirection)
+        }
+        // 한도 초과: 저장되지 않아야 한다
+        val countAt5 = feedbackRepository.count()
+        mockMvc.perform(
+            post("/download/${app.appId}/feedback")
+                .param("kind", "BUG")
+                .param("message", "rate limit overflow")
+        ).andExpect(status().is3xxRedirection)
+
+        assertThat(feedbackRepository.count()).isEqualTo(countAt5)
+        assertThat(countAt5).isEqualTo(5)
+    }
+
+    @Test
+    fun `feedback 제출 - 잘못된 kind 값은 거부되고 저장되지 않는다`() {
         val app = givenApp("app_fb_badkind")
+        val before = feedbackRepository.count()
 
         mockMvc.perform(
             post("/download/${app.appId}/feedback")
@@ -89,8 +121,7 @@ class FeedbackTest : AbstractIntegrationTest() {
                 .param("message", "messages of various kinds")
         ).andExpect(status().is3xxRedirection)
 
-        val saved = feedbackRepository.findAll().last { it.appId == app.appId }
-        assertThat(saved.kind.name).isEqualTo("BUG")
+        assertThat(feedbackRepository.count()).isEqualTo(before)
     }
 
     // ─── 매니저 대시보드 ─────────────────────────────────────────────────────
