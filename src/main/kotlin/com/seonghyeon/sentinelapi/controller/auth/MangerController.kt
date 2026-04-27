@@ -2,10 +2,12 @@ package com.seonghyeon.sentinelapi.controller.auth
 
 import com.seonghyeon.sentinelapi.common.exception.SentinelException
 import com.seonghyeon.sentinelapi.controller.auth.dto.LoginHistoryView
+import com.seonghyeon.sentinelapi.domain.FeedbackStatus
 import com.seonghyeon.sentinelapi.service.ApiKeyService
 import com.seonghyeon.sentinelapi.service.AppFileService
 import com.seonghyeon.sentinelapi.service.ApplicationService
 import com.seonghyeon.sentinelapi.service.DeviceService
+import com.seonghyeon.sentinelapi.service.FeedbackService
 import com.seonghyeon.sentinelapi.service.LoginHistoryService
 import com.seonghyeon.sentinelapi.service.ManagerService
 import com.seonghyeon.sentinelapi.service.TokenAuthService
@@ -32,6 +34,7 @@ class MangerController(
     private val loginHistoryService: LoginHistoryService,
     private val deviceService: DeviceService,
     private val appFileService: AppFileService,
+    private val feedbackService: FeedbackService,
 ) {
 
     @GetMapping("/login")
@@ -44,8 +47,24 @@ class MangerController(
 
     @GetMapping("/dashboard/apikeys")
     fun apiKeysPage(model: Model): String {
+        val kst = ZoneId.of("Asia/Seoul")
+        val utc = ZoneId.of("UTC")
+        val managers = managerService.findAll().map { m ->
+            mapOf(
+                "id" to m.id,
+                "username" to maskUsername(m.username),
+                "createdAtKst" to m.createdAt.atZone(utc).withZoneSameInstant(kst).toLocalDateTime(),
+            )
+        }
         model.addAttribute("apiKeys", apiKeyService.findAll())
+        model.addAttribute("managers", managers)
         return "dashboard/apikeys"
+    }
+
+    private fun maskUsername(username: String): String {
+        if (username.length <= 2) return username.take(1) + "*"
+        if (username.length <= 4) return username.take(2) + "*".repeat(username.length - 2)
+        return username.take(2) + "*".repeat(username.length - 4) + username.takeLast(2)
     }
 
     @GetMapping("/dashboard/api-docs")
@@ -268,5 +287,56 @@ class MangerController(
         model.addAttribute("currentPage", historyViews.number)
         model.addAttribute("totalPages", historyViews.totalPages)
         return "dashboard/history"
+    }
+
+    // --- 피드백 ---
+
+    @GetMapping("/dashboard/feedbacks")
+    fun feedbacksPage(
+        @RequestParam(required = false) status: String?,
+        @RequestParam(defaultValue = "0") page: Int,
+        model: Model,
+    ): String {
+        val kst = ZoneId.of("Asia/Seoul")
+        val utc = ZoneId.of("UTC")
+        val pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"))
+        val statusEnum = status?.uppercase()?.let { runCatching { FeedbackStatus.valueOf(it) }.getOrNull() }
+        val feedbackPage = feedbackService.findPage(statusEnum, pageable)
+        val views = feedbackPage.map { f ->
+            mapOf(
+                "id" to f.id,
+                "appId" to f.appId,
+                "kind" to f.kind.name,
+                "message" to f.message,
+                "contact" to f.contact,
+                "ip" to f.ip,
+                "status" to f.status.name,
+                "createdAtKst" to f.createdAt.atZone(utc).withZoneSameInstant(kst).toLocalDateTime(),
+                "resolvedAtKst" to f.resolvedAt?.atZone(utc)?.withZoneSameInstant(kst)?.toLocalDateTime(),
+            )
+        }
+        model.addAttribute("feedbacks", views.content)
+        model.addAttribute("statusFilter", status.orEmpty())
+        model.addAttribute("currentPage", views.number)
+        model.addAttribute("totalPages", views.totalPages)
+        return "dashboard/feedbacks"
+    }
+
+    @PostMapping("/dashboard/feedbacks/{id}/resolve")
+    fun resolveFeedback(@PathVariable id: Long): String {
+        feedbackService.markResolved(id)
+        return "redirect:/dashboard/feedbacks"
+    }
+
+    @PostMapping("/dashboard/feedbacks/{id}/reopen")
+    fun reopenFeedback(@PathVariable id: Long): String {
+        feedbackService.reopen(id)
+        return "redirect:/dashboard/feedbacks"
+    }
+
+    @PostMapping("/dashboard/feedbacks/{id}/delete")
+    fun deleteFeedback(@PathVariable id: Long): String {
+        feedbackService.delete(id)
+        return "redirect:/dashboard/feedbacks"
     }
 }

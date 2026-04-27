@@ -30,6 +30,25 @@
     </div>
 
     <div class="card">
+        <h2>등록된 매니저</h2>
+        <table>
+            <thead>
+                <tr><th>ID</th><th>아이디 (마스킹)</th><th>생성일시 (KST)</th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="m : ${managers}">
+                    <td th:text="${m.id}"></td>
+                    <td style="font-family:var(--font-mono);" th:text="${m.username}"></td>
+                    <td th:text="${#temporals.format(m.createdAtKst, 'yyyy-MM-dd HH:mm')}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(managers)}">
+                    <td colspan="3" style="text-align:center;color:#94a3b8;padding:16px;">등록된 매니저가 없습니다.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
         <h2>매니저용 API Key 관리</h2>
         <form th:action="@{/dashboard/register/apikey}" method="post" style="margin-bottom:16px;">
             <div class="form-row">

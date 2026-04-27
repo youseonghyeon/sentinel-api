@@ -22,6 +22,26 @@
         .brand-bar .name { font-weight: 700; font-size: 15px; letter-spacing: 0.01em; color: #1e293b; }
 
         .wrap { max-width: 680px; margin: 8px auto 64px; padding: 0 20px; }
+        .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; max-width: 1080px; margin: 8px auto 64px; padding: 0 20px; align-items: start; }
+        @media (max-width: 920px) { .layout { grid-template-columns: 1fr; max-width: 680px; } }
+
+        .feedback-panel { position: sticky; top: 16px; background: #fff; border: 1px solid rgba(15,23,42,0.06); border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 4px 16px -8px rgba(15,23,42,0.08); }
+        .feedback-panel h3 { font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+        .feedback-panel h3 .dot { width: 8px; height: 8px; border-radius: 999px; background: #dc2626; display: inline-block; }
+        .feedback-panel p.lead { font-size: 12px; color: #64748b; line-height: 1.5; margin-bottom: 12px; }
+        .feedback-panel .kind-row { display: flex; gap: 8px; margin-bottom: 10px; }
+        .feedback-panel .kind-row label { flex: 1; cursor: pointer; padding: 8px 10px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; color: #334155; text-align: center; transition: border-color .12s, background .12s, color .12s; }
+        .feedback-panel .kind-row input[type=radio] { display: none; }
+        .feedback-panel .kind-row input[type=radio]:checked + span { color: #4338ca; }
+        .feedback-panel .kind-row label:has(input:checked) { border-color: #4338ca; background: #eef2ff; }
+        .feedback-panel textarea { width: 100%; min-height: 110px; resize: vertical; padding: 10px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; color: #0f172a; }
+        .feedback-panel textarea:focus { outline: none; border-color: #4338ca; box-shadow: 0 0 0 3px rgba(67,56,202,0.12); }
+        .feedback-panel input.contact { width: 100%; padding: 10px 12px; margin-top: 8px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; }
+        .feedback-panel input.contact:focus { outline: none; border-color: #4338ca; box-shadow: 0 0 0 3px rgba(67,56,202,0.12); }
+        .feedback-panel button.submit { margin-top: 10px; width: 100%; padding: 10px; background: linear-gradient(135deg, #2563eb, #4338ca); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .feedback-panel button.submit:hover { filter: brightness(1.05); }
+        .feedback-panel .ok { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; padding: 8px 10px; border-radius: 8px; font-size: 12px; margin-bottom: 10px; }
+        .feedback-panel .err { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; padding: 8px 10px; border-radius: 8px; font-size: 12px; margin-bottom: 10px; }
 
         .hero {
             background: linear-gradient(135deg, #1e3a8a 0%, #4338ca 55%, #6d28d9 100%);
@@ -143,16 +163,17 @@
     <span class="mark"></span>
     <span class="name">Coding Boss</span>
 </div>
-<div class="wrap">
-
-    <div th:if="${notFound}" class="hero notfound">
+<div th:if="${notFound}" class="wrap">
+    <div class="hero notfound">
         <div class="tag">NOT FOUND</div>
         <h1>애플리케이션을 찾을 수 없습니다</h1>
         <div class="desc">요청하신 애플리케이션 ID가 존재하지 않거나 삭제되었습니다.</div>
         <span class="chip" th:text="${appIdInput}"></span>
     </div>
+</div>
 
-    <div th:unless="${notFound}">
+<div th:unless="${notFound}" class="layout">
+    <div>
         <div class="hero">
             <div class="tag">APPLICATION</div>
             <h1 th:text="${app.name}"></h1>
@@ -230,6 +251,24 @@
 
         <div class="footer">Powered by Coding Boss</div>
     </div>
+
+    <aside class="feedback-panel" th:if="${app != null}">
+        <h3><span class="dot"></span>오류 제보 / 개선 요청</h3>
+        <p class="lead">사용 중 발견한 문제나 개선 아이디어를 남겨주세요. 운영자가 확인합니다.</p>
+
+        <div th:if="${feedbackOk}" class="ok">의견이 접수되었습니다. 감사합니다.</div>
+        <div th:if="${feedbackError}" class="err" th:text="${feedbackError}"></div>
+
+        <form th:action="@{/download/{appId}/feedback(appId=${app.appId})}" method="post">
+            <div class="kind-row">
+                <label><input type="radio" name="kind" value="BUG" checked><span>오류 제보</span></label>
+                <label><input type="radio" name="kind" value="IMPROVEMENT"><span>개선 요청</span></label>
+            </div>
+            <textarea name="message" maxlength="4000" placeholder="문제 상황 또는 요청 사항 (5자 이상)" required></textarea>
+            <input class="contact" name="contact" maxlength="200" placeholder="회신용 연락처 (이메일 등, 선택)">
+            <button class="submit" type="submit">보내기</button>
+        </form>
+    </aside>
 </div>
 <script>
     function attachToken(form) {

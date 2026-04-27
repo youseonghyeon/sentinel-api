@@ -11,6 +11,8 @@ import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 @Service
 class ManagerService(
@@ -29,9 +31,16 @@ class ManagerService(
     fun register(username: String, password: String): Manager {
         log.info("Register manager: username={}", username)
         val manager = managerRepository.save(
-            Manager(id = 0, username = username, password = passwordEncoder.encode(password)!!)
+            Manager(
+                id = 0,
+                username = username,
+                password = passwordEncoder.encode(password)!!,
+                createdAt = LocalDateTime.now(ZoneOffset.UTC),
+            )
         )
         log.info("Manager registered: id={}", manager.id)
         return manager
     }
+
+    fun findAll(): List<Manager> = managerRepository.findAll()
 }

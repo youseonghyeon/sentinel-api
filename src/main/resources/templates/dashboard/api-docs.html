@@ -122,10 +122,10 @@
             <div class="response">
                 <span class="status status-ok">200 OK</span>
 <pre class="code">{
-  <span class="k">"tokenStr"</span>: <span class="s">"abc123..."</span>,
   <span class="k">"appName"</span>: <span class="s">"My App"</span>,
   <span class="k">"expireDate"</span>: <span class="s">"2026-12-31"</span>,
-  <span class="k">"maxDeviceCount"</span>: <span class="n">1</span>
+  <span class="k">"maxDeviceCount"</span>: <span class="n">1</span>,
+  <span class="k">"currentTime"</span>: <span class="s">"2026-04-27T05:30:00"</span>
 }</pre>
             </div>
 
@@ -167,7 +167,10 @@
             <h4>Responses</h4>
             <div class="response">
                 <span class="status status-ok">200 OK</span>
-                <p style="font-size:13px;color:#64748b;margin-bottom:6px;">login/token과 동일한 본문</p>
+<pre class="code">{
+  <span class="k">"expireDate"</span>: <span class="s">"2026-12-31"</span>,
+  <span class="k">"currentTime"</span>: <span class="s">"2026-04-27T05:30:00"</span>
+}</pre>
             </div>
             <div class="response">
                 <span class="status status-err">401 DEVICE_LOGGED_OUT</span>
@@ -394,6 +397,383 @@
         </div>
     </details>
 
+    <div class="group-title">매니저 API (X-Api-Key 인증)</div>
+
+    <div class="note">
+        <strong>인증 방식</strong> — 매니저 전용 API는 <code>X-Api-Key</code> 헤더를 사용합니다.
+        API Key는 매니저 UI의 <em>매니저 API Key 관리</em> 탭에서 발급/삭제할 수 있으며, 헤더가 누락되었거나 유효하지 않으면 <code>401 INVALID_API_KEY</code>가 반환됩니다.
+        Base URL: <code>/api/v1/manager</code>
+    </div>
+
+    <details class="endpoint">
+        <summary>
+            <span class="method method-post">POST</span>
+            <span class="path">/api/v1/manager/users</span>
+            <span class="summary-text">토큰 자동 생성 (운영자용)</span>
+            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </summary>
+        <div class="endpoint-body">
+            <p class="desc">지정한 앱(<code>appId</code>)에 대해 만료일을 가진 토큰을 자동 생성하여 반환합니다. 토큰 문자열은 서버가 생성하므로 직접 입력할 수 없습니다.</p>
+
+            <h4>Headers</h4>
+            <table class="param-table">
+                <thead><tr><th>이름</th><th>필수</th><th>설명</th></tr></thead>
+                <tbody>
+                    <tr><td class="mono">X-Api-Key</td><td class="req"><span class="req-yes">필수</span></td><td>매니저 API Key</td></tr>
+                    <tr><td class="mono">Content-Type</td><td class="req"><span class="req-yes">필수</span></td><td><code>application/json</code></td></tr>
+                </tbody>
+            </table>
+
+            <h4>Request Body</h4>
+            <table class="param-table">
+                <thead><tr><th>이름</th><th>필수</th><th>설명</th></tr></thead>
+                <tbody>
+                    <tr><td class="mono">appId</td><td class="req"><span class="req-yes">필수</span></td><td>토큰을 발급할 앱의 식별자 (App.appId)</td></tr>
+                    <tr><td class="mono">expireDate</td><td class="req"><span class="req-yes">필수</span></td><td>만료일 (<code>YYYY-MM-DD</code>, KST 기준)</td></tr>
+                    <tr><td class="mono">maxDeviceCount</td><td class="req"><span class="req-no">선택</span></td><td>허용 PC 수. 기본값 <code>1</code>, <code>0</code>은 무제한</td></tr>
+                </tbody>
+            </table>
+
+<pre class="code">{
+  <span class="k">"appId"</span>: <span class="s">"app_12345678"</span>,
+  <span class="k">"expireDate"</span>: <span class="s">"2026-12-31"</span>,
+  <span class="k">"maxDeviceCount"</span>: <span class="n">1</span>
+}</pre>
+
+            <h4>Responses</h4>
+            <div class="response">
+                <span class="status status-ok">200 OK</span>
+<pre class="code">{
+  <span class="k">"id"</span>: <span class="n">42</span>,
+  <span class="k">"token"</span>: <span class="s">"auto-generated-token-string"</span>,
+  <span class="k">"appId"</span>: <span class="s">"app_12345678"</span>,
+  <span class="k">"appName"</span>: <span class="s">"My App"</span>,
+  <span class="k">"expireDate"</span>: <span class="s">"2026-12-31"</span>,
+  <span class="k">"maxDeviceCount"</span>: <span class="n">1</span>
+}</pre>
+            </div>
+            <div class="response">
+                <span class="status status-err">401 INVALID_API_KEY</span>
+                <p style="font-size:13px;color:#64748b;"><code>X-Api-Key</code> 헤더가 누락되었거나 유효하지 않음</p>
+            </div>
+            <div class="response">
+                <span class="status status-err">401 INVALID_APPLICATION</span>
+                <p style="font-size:13px;color:#64748b;">요청한 <code>appId</code>가 존재하지 않거나 <code>maxDeviceCount</code>가 음수</p>
+            </div>
+
+            <h4>cURL</h4>
+<pre class="code">curl -X POST <span class="s">"https://HOST/api/v1/manager/users"</span> \
+  -H <span class="s">"X-Api-Key: YOUR_API_KEY"</span> \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{"appId":"app_12345678","expireDate":"2026-12-31","maxDeviceCount":1}'</span></pre>
+        </div>
+    </details>
+
+    <details class="endpoint">
+        <summary>
+            <span class="method method-get">GET</span>
+            <span class="path">/api/v1/manager/users</span>
+            <span class="summary-text">토큰 목록 (검색 / 페이징)</span>
+            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </summary>
+        <div class="endpoint-body">
+            <p class="desc">등록된 토큰 목록을 페이지 단위로 반환합니다. <code>appId</code>로 앱 필터링, <code>q</code>로 토큰 문자열 부분 검색이 가능합니다.</p>
+
+            <h4>Headers</h4>
+            <table class="param-table">
+                <thead><tr><th>이름</th><th>필수</th><th>설명</th></tr></thead>
+                <tbody><tr><td class="mono">X-Api-Key</td><td class="req"><span class="req-yes">필수</span></td><td>매니저 API Key</td></tr></tbody>
+            </table>
+
+            <h4>Query Parameters</h4>
+            <table class="param-table">
+                <thead><tr><th>이름</th><th>필수</th><th>설명</th></tr></thead>
+                <tbody>
+                    <tr><td class="mono">appId</td><td class="req"><span class="req-no">선택</span></td><td>App.appId 로 앱 필터링</td></tr>
+                    <tr><td class="mono">q</td><td class="req"><span class="req-no">선택</span></td><td>토큰 문자열 부분 검색 (대소문자 무시)</td></tr>
+                    <tr><td class="mono">page</td><td class="req"><span class="req-no">선택</span></td><td>0-base 페이지 번호 (기본 0)</td></tr>
+                    <tr><td class="mono">size</td><td class="req"><span class="req-no">선택</span></td><td>페이지 크기 (기본 20, 최대 200)</td></tr>
+                </tbody>
+            </table>
+
+            <h4>Responses</h4>
+            <div class="response">
+                <span class="status status-ok">200 OK</span>
+<pre class="code">{
+  <span class="k">"content"</span>: [
+    {
+      <span class="k">"id"</span>: <span class="n">42</span>,
+      <span class="k">"token"</span>: <span class="s">"abc..."</span>,
+      <span class="k">"appId"</span>: <span class="s">"app_12345678"</span>,
+      <span class="k">"appName"</span>: <span class="s">"My App"</span>,
+      <span class="k">"expireDate"</span>: <span class="s">"2026-12-31"</span>,
+      <span class="k">"maxDeviceCount"</span>: <span class="n">1</span>
+    }
+  ],
+  <span class="k">"page"</span>: <span class="n">0</span>,
+  <span class="k">"size"</span>: <span class="n">20</span>,
+  <span class="k">"totalElements"</span>: <span class="n">1</span>,
+  <span class="k">"totalPages"</span>: <span class="n">1</span>
+}</pre>
+            </div>
+            <div class="response">
+                <span class="status status-err">401 INVALID_APPLICATION</span>
+                <p style="font-size:13px;color:#64748b;"><code>appId</code> 파라미터가 존재하지 않는 앱을 가리킴</p>
+            </div>
+        </div>
+    </details>
+
+    <details class="endpoint">
+        <summary>
+            <span class="method method-get">GET</span>
+            <span class="path">/api/v1/manager/users/{tokenId}</span>
+            <span class="summary-text">토큰 단건 조회</span>
+            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </summary>
+        <div class="endpoint-body">
+            <p class="desc">토큰 ID 로 단일 토큰 정보를 조회합니다.</p>
+            <h4>Path Parameters</h4>
+            <table class="param-table">
+                <thead><tr><th>이름</th><th>필수</th><th>설명</th></tr></thead>
+                <tbody><tr><td class="mono">tokenId</td><td class="req"><span class="req-yes">필수</span></td><td>토큰 PK</td></tr></tbody>
+            </table>
+            <h4>Responses</h4>
+            <div class="response">
+                <span class="status status-ok">200 OK</span>
+                <p style="font-size:13px;color:#64748b;">목록 응답의 <code>content[]</code> 항목과 동일한 구조</p>
+            </div>
+            <div class="response">
+                <span class="status status-err">401 INVALID_TOKEN</span>
+                <p style="font-size:13px;color:#64748b;">해당 ID 의 토큰이 없음</p>
+            </div>
+        </div>
+    </details>
+
+    <details class="endpoint">
+        <summary>
+            <span class="method method-patch">PATCH</span>
+            <span class="path">/api/v1/manager/users/{tokenId}</span>
+            <span class="summary-text">토큰 만료일 / 최대 PC 수 수정</span>
+            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </summary>
+        <div class="endpoint-body">
+            <p class="desc"><code>expireDate</code>와 <code>maxDeviceCount</code>를 부분 갱신합니다. 누락된 필드는 기존 값을 유지합니다.</p>
+
+            <h4>Request Body</h4>
+            <table class="param-table">
+                <thead><tr><th>이름</th><th>필수</th><th>설명</th></tr></thead>
+                <tbody>
+                    <tr><td class="mono">expireDate</td><td class="req"><span class="req-no">선택</span></td><td>새 만료일 (KST 기준)</td></tr>
+                    <tr><td class="mono">maxDeviceCount</td><td class="req"><span class="req-no">선택</span></td><td>새 최대 PC 수 (음수 불가, <code>0</code>은 무제한)</td></tr>
+                </tbody>
+            </table>
+
+<pre class="code">{
+  <span class="k">"expireDate"</span>: <span class="s">"2027-06-30"</span>,
+  <span class="k">"maxDeviceCount"</span>: <span class="n">3</span>
+}</pre>
+
+            <h4>Responses</h4>
+            <div class="response">
+                <span class="status status-ok">200 OK</span>
+                <p style="font-size:13px;color:#64748b;">갱신된 토큰 (TokenView)</p>
+            </div>
+            <div class="response">
+                <span class="status status-err">401 INVALID_TOKEN</span>
+                <p style="font-size:13px;color:#64748b;">해당 ID 의 토큰이 없음</p>
+            </div>
+        </div>
+    </details>
+
+    <details class="endpoint">
+        <summary>
+            <span class="method method-delete">DELETE</span>
+            <span class="path">/api/v1/manager/users/{tokenId}</span>
+            <span class="summary-text">토큰 폐기</span>
+            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </summary>
+        <div class="endpoint-body">
+            <p class="desc">토큰을 삭제합니다. 연결된 <code>DeviceRegistration</code>은 외래키 제약에 따라 함께 처리되므로, 필요 시 먼저 기기 목록을 정리하세요.</p>
+            <h4>Responses</h4>
+            <div class="response">
+                <span class="status status-ok">204 No Content</span>
+            </div>
+            <div class="response">
+                <span class="status status-err">401 INVALID_TOKEN</span>
+                <p style="font-size:13px;color:#64748b;">해당 ID 의 토큰이 없음</p>
+            </div>
+        </div>
+    </details>
+
+    <details class="endpoint">
+        <summary>
+            <span class="method method-get">GET</span>
+            <span class="path">/api/v1/manager/users/{tokenId}/devices</span>
+            <span class="summary-text">토큰에 등록된 기기 목록</span>
+            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </summary>
+        <div class="endpoint-body">
+            <p class="desc">토큰에 연결된 모든 기기를 반환합니다. 시간은 UTC <code>LocalDateTime</code> 입니다.</p>
+            <h4>Responses</h4>
+            <div class="response">
+                <span class="status status-ok">200 OK</span>
+<pre class="code">[
+  {
+    <span class="k">"deviceId"</span>: <span class="s">"12345678-ABCD-..."</span>,
+    <span class="k">"registeredAt"</span>: <span class="s">"2026-04-01T08:30:00"</span>,
+    <span class="k">"lastSeenAt"</span>: <span class="s">"2026-04-27T05:30:00"</span>
+  }
+]</pre>
+            </div>
+            <div class="response">
+                <span class="status status-err">401 INVALID_TOKEN</span>
+            </div>
+        </div>
+    </details>
+
+    <details class="endpoint">
+        <summary>
+            <span class="method method-delete">DELETE</span>
+            <span class="path">/api/v1/manager/users/{tokenId}/devices/{deviceId}</span>
+            <span class="summary-text">특정 기기 강제 로그아웃</span>
+            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </summary>
+        <div class="endpoint-body">
+            <p class="desc">지정한 기기를 <code>DeviceRegistration</code>에서 제거합니다. 이후 해당 기기로 <code>/check/token</code> 호출 시 <code>DEVICE_LOGGED_OUT</code>이 반환됩니다.</p>
+            <h4>Responses</h4>
+            <div class="response">
+                <span class="status status-ok">204 No Content</span>
+            </div>
+            <div class="response">
+                <span class="status status-err">401 INVALID_TOKEN</span>
+            </div>
+        </div>
+    </details>
+
+    <details class="endpoint">
+        <summary>
+            <span class="method method-get">GET</span>
+            <span class="path">/api/v1/manager/apps</span>
+            <span class="summary-text">앱 목록</span>
+            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </summary>
+        <div class="endpoint-body">
+            <h4>Responses</h4>
+            <div class="response">
+                <span class="status status-ok">200 OK</span>
+<pre class="code">[
+  {
+    <span class="k">"id"</span>: <span class="n">1</span>,
+    <span class="k">"appId"</span>: <span class="s">"app_12345678"</span>,
+    <span class="k">"name"</span>: <span class="s">"My App"</span>,
+    <span class="k">"description"</span>: <span class="s">""</span>
+  }
+]</pre>
+            </div>
+        </div>
+    </details>
+
+    <details class="endpoint">
+        <summary>
+            <span class="method method-post">POST</span>
+            <span class="path">/api/v1/manager/apps</span>
+            <span class="summary-text">앱 등록 (appId 자동 생성)</span>
+            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </summary>
+        <div class="endpoint-body">
+            <p class="desc">새 앱을 등록합니다. <code>appId</code>는 서버가 자동 생성합니다.</p>
+
+            <h4>Request Body</h4>
+            <table class="param-table">
+                <thead><tr><th>이름</th><th>필수</th><th>설명</th></tr></thead>
+                <tbody>
+                    <tr><td class="mono">name</td><td class="req"><span class="req-yes">필수</span></td><td>앱 이름 (공백 불가)</td></tr>
+                    <tr><td class="mono">description</td><td class="req"><span class="req-no">선택</span></td><td>앱 설명</td></tr>
+                </tbody>
+            </table>
+
+<pre class="code">{
+  <span class="k">"name"</span>: <span class="s">"My App"</span>,
+  <span class="k">"description"</span>: <span class="s">"Internal tool"</span>
+}</pre>
+
+            <h4>Responses</h4>
+            <div class="response">
+                <span class="status status-ok">200 OK</span>
+                <p style="font-size:13px;color:#64748b;">목록 응답 항목과 동일</p>
+            </div>
+            <div class="response">
+                <span class="status status-err">401 INVALID_APPLICATION</span>
+                <p style="font-size:13px;color:#64748b;"><code>name</code>이 비어 있음</p>
+            </div>
+        </div>
+    </details>
+
+    <details class="endpoint">
+        <summary>
+            <span class="method method-delete">DELETE</span>
+            <span class="path">/api/v1/manager/apps/{id}</span>
+            <span class="summary-text">앱 삭제 (연결된 파일 함께 제거)</span>
+            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </summary>
+        <div class="endpoint-body">
+            <p class="desc">앱을 삭제합니다. 해당 앱의 업로드 파일(<code>AppFile</code>)도 함께 정리됩니다.</p>
+            <h4>Responses</h4>
+            <div class="response">
+                <span class="status status-ok">204 No Content</span>
+            </div>
+            <div class="response">
+                <span class="status status-err">401 INVALID_APPLICATION</span>
+                <p style="font-size:13px;color:#64748b;">해당 ID 의 앱이 없음</p>
+            </div>
+        </div>
+    </details>
+
+    <details class="endpoint">
+        <summary>
+            <span class="method method-get">GET</span>
+            <span class="path">/api/v1/manager/login-histories</span>
+            <span class="summary-text">로그인 이력 조회 (검색 / 페이징)</span>
+            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </summary>
+        <div class="endpoint-body">
+            <p class="desc"><code>LoginHistory</code> 를 시간 역순으로 페이징 조회합니다. <code>createdAt</code> 은 UTC 입니다.</p>
+
+            <h4>Query Parameters</h4>
+            <table class="param-table">
+                <thead><tr><th>이름</th><th>필수</th><th>설명</th></tr></thead>
+                <tbody>
+                    <tr><td class="mono">appId</td><td class="req"><span class="req-no">선택</span></td><td>App.appId 정확히 일치</td></tr>
+                    <tr><td class="mono">token</td><td class="req"><span class="req-no">선택</span></td><td>토큰 문자열 부분 검색 (대소문자 무시)</td></tr>
+                    <tr><td class="mono">deviceId</td><td class="req"><span class="req-no">선택</span></td><td>Machine GUID 정확히 일치</td></tr>
+                    <tr><td class="mono">page</td><td class="req"><span class="req-no">선택</span></td><td>기본 0</td></tr>
+                    <tr><td class="mono">size</td><td class="req"><span class="req-no">선택</span></td><td>기본 20, 최대 200</td></tr>
+                </tbody>
+            </table>
+
+            <h4>Responses</h4>
+            <div class="response">
+                <span class="status status-ok">200 OK</span>
+<pre class="code">{
+  <span class="k">"content"</span>: [
+    {
+      <span class="k">"id"</span>: <span class="n">100</span>,
+      <span class="k">"token"</span>: <span class="s">"abc..."</span>,
+      <span class="k">"appId"</span>: <span class="s">"app_12345678"</span>,
+      <span class="k">"ip"</span>: <span class="s">"203.0.113.10"</span>,
+      <span class="k">"deviceId"</span>: <span class="s">"12345678-ABCD-..."</span>,
+      <span class="k">"createdAt"</span>: <span class="s">"2026-04-27T05:30:00"</span>
+    }
+  ],
+  <span class="k">"page"</span>: <span class="n">0</span>,
+  <span class="k">"size"</span>: <span class="n">20</span>,
+  <span class="k">"totalElements"</span>: <span class="n">1</span>,
+  <span class="k">"totalPages"</span>: <span class="n">1</span>
+}</pre>
+            </div>
+        </div>
+    </details>
+
     <div class="group-title">에러 코드</div>
     <div class="endpoint" style="padding: 4px;">
         <table class="error-table">
@@ -408,6 +788,7 @@
                 <tr><td class="code-col">NO_FILE_AVAILABLE</td><td class="status-col">404</td><td>등록된 파일이 없습니다.</td></tr>
                 <tr><td class="code-col">INVALID_VERSION</td><td class="status-col">404</td><td>요청한 버전을 찾을 수 없습니다.</td></tr>
                 <tr><td class="code-col">FILE_NOT_FOUND</td><td class="status-col">404</td><td>파일을 찾을 수 없습니다.</td></tr>
+                <tr><td class="code-col">INVALID_API_KEY</td><td class="status-col">401</td><td>유효하지 않은 API 키입니다.</td></tr>
             </tbody>
         </table>
     </div>

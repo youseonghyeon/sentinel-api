@@ -1,9 +1,13 @@
 package com.seonghyeon.sentinelapi.controller
 
 import com.seonghyeon.sentinelapi.common.exception.SentinelException
+import com.seonghyeon.sentinelapi.domain.FeedbackKind
 import com.seonghyeon.sentinelapi.service.AppFileService
 import com.seonghyeon.sentinelapi.service.ApplicationService
+import com.seonghyeon.sentinelapi.service.FeedbackService
 import com.seonghyeon.sentinelapi.service.TokenAuthService
+import com.seonghyeon.sentinelapi.utils.clientIp
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.io.FileSystemResource
 import org.springframework.http.ContentDisposition
 import org.springframework.http.HttpHeaders
@@ -25,6 +29,7 @@ class DownloadController(
     private val applicationService: ApplicationService,
     private val tokenAuthService: TokenAuthService,
     private val appFileService: AppFileService,
+    private val feedbackService: FeedbackService,
 ) {
 
     @GetMapping("/{appId}")
@@ -85,5 +90,39 @@ class DownloadController(
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .contentLength(file.sizeBytes)
             .body(FileSystemResource(path))
+    }
+
+    @PostMapping("/{appId}/feedback")
+    fun submitFeedback(
+        @PathVariable appId: String,
+        @RequestParam("kind") kind: String,
+        @RequestParam("message") message: String,
+        @RequestParam("contact", required = false) contact: String?,
+        request: HttpServletRequest,
+        redirectAttributes: RedirectAttributes,
+    ): String {
+        val app = applicationService.findByAppId(appId)
+        if (app == null) {
+            return "redirect:/download/$appId"
+        }
+        val trimmed = message.trim()
+        if (trimmed.length < 5) {
+            redirectAttributes.addFlashAttribute("feedbackError", "내용은 5자 이상 입력해주세요.")
+            return "redirect:/download/$appId"
+        }
+        if (trimmed.length > 4000) {
+            redirectAttributes.addFlashAttribute("feedbackError", "내용은 4000자 이내로 입력해주세요.")
+            return "redirect:/download/$appId"
+        }
+        val parsedKind = runCatching { FeedbackKind.valueOf(kind.uppercase()) }.getOrDefault(FeedbackKind.BUG)
+        feedbackService.submit(
+            appId = app.appId,
+            kind = parsedKind,
+            message = trimmed,
+            contact = contact?.trim()?.takeIf { it.isNotBlank() },
+            ip = request.clientIp(),
+        )
+        redirectAttributes.addFlashAttribute("feedbackOk", true)
+        return "redirect:/download/$appId"
     }
 }

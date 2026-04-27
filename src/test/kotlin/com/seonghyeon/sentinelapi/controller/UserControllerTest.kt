@@ -54,7 +54,10 @@ class UserControllerTest : AbstractIntegrationTest() {
                 .param("token", "validtoken")
         )
             .andExpect(status().isOk)
+            .andExpect(jsonPath("$.appName").value(app.name))
             .andExpect(jsonPath("$.expireDate").value(expireDate.toString()))
+            .andExpect(jsonPath("$.maxDeviceCount").value(0))
+            .andExpect(jsonPath("$.currentTime").exists())
     }
 
     @Test

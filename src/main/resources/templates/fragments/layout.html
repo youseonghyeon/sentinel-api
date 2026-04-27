@@ -14,8 +14,9 @@
         .sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
         .sidebar-title { padding: 24px 20px 16px; font-size: 18px; font-weight: bold; border-bottom: 1px solid #334155; }
         .sidebar nav { flex: 1; padding: 12px 0; }
-        .sidebar nav a { display: block; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; }
+        .sidebar nav a { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; color: #cbd5e1; text-decoration: none; font-size: 14px; }
         .sidebar nav a:hover, .sidebar nav a.active { background: #334155; color: #fff; }
+        .sidebar .nav-badge { background: #dc2626; color: #fff; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
         .sidebar-footer { padding: 16px 20px; border-top: 1px solid #334155; }
         .sidebar-footer a { color: #94a3b8; font-size: 13px; text-decoration: none; }
         .sidebar-footer a:hover { color: #fff; }
@@ -74,11 +75,15 @@
 <div th:fragment="sidebar(activePage)" class="sidebar">
     <div class="sidebar-title">Sentinel</div>
     <nav>
-        <a th:href="@{/dashboard/apps}"     th:classappend="${activePage == 'apps'}     ? ' active'">애플리케이션 관리</a>
-        <a th:href="@{/dashboard/users}"    th:classappend="${activePage == 'users'}    ? ' active'">사용자 관리</a>
-        <a th:href="@{/dashboard/history}"  th:classappend="${activePage == 'history'}  ? ' active'">사용자 히스토리</a>
-        <a th:href="@{/dashboard/apikeys}"  th:classappend="${activePage == 'apikeys'}  ? ' active'">매니저 관리</a>
-        <a th:href="@{/dashboard/api-docs}" th:classappend="${activePage == 'api-docs'} ? ' active'">API 명세</a>
+        <a th:href="@{/dashboard/apps}"      th:classappend="${activePage == 'apps'}      ? ' active'"><span>애플리케이션 관리</span></a>
+        <a th:href="@{/dashboard/users}"     th:classappend="${activePage == 'users'}     ? ' active'"><span>사용자 관리</span></a>
+        <a th:href="@{/dashboard/history}"   th:classappend="${activePage == 'history'}   ? ' active'"><span>사용자 히스토리</span></a>
+        <a th:href="@{/dashboard/feedbacks}" th:classappend="${activePage == 'feedbacks'} ? ' active'">
+            <span>오류 / 개선 요청</span>
+            <span th:if="${openFeedbackCount != null and openFeedbackCount > 0}" class="nav-badge" th:text="${openFeedbackCount}"></span>
+        </a>
+        <a th:href="@{/dashboard/apikeys}"   th:classappend="${activePage == 'apikeys'}   ? ' active'"><span>매니저 관리</span></a>
+        <a th:href="@{/dashboard/api-docs}"  th:classappend="${activePage == 'api-docs'}  ? ' active'"><span>API 명세</span></a>
     </nav>
     <div class="sidebar-footer">
         <a th:href="@{/logout}">로그아웃</a>

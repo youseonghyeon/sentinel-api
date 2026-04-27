@@ -2,6 +2,7 @@ package com.seonghyeon.sentinelapi.controller.auth
 
 import com.seonghyeon.sentinelapi.controller.auth.dto.AppVersionInfo
 import com.seonghyeon.sentinelapi.controller.auth.dto.DeviceView
+import com.seonghyeon.sentinelapi.controller.auth.dto.UserCheckResponse
 import com.seonghyeon.sentinelapi.controller.auth.dto.UserLoginResponse
 import com.seonghyeon.sentinelapi.common.exception.ErrorCode
 import com.seonghyeon.sentinelapi.common.exception.SentinelException
@@ -72,7 +73,7 @@ class UserController(
         @RequestHeader("X-Client-Id") appId: String,
         @RequestHeader(value = "X-Device-Id", required = false) deviceId: String?,
         @RequestParam("token") token: String,
-    ): ResponseEntity<UserLoginResponse> {
+    ): ResponseEntity<UserCheckResponse> {
         val clientId = applicationService.resolveClientId(appId)
         val userToken = tokenAuthService.check(token, clientId)
 
@@ -80,7 +81,7 @@ class UserController(
             deviceService.check(userToken.id, deviceId)
         }
 
-        return ResponseEntity.ok(UserLoginResponse.from(userToken))
+        return ResponseEntity.ok(UserCheckResponse.from(userToken))
     }
 
     @GetMapping("/devices")
