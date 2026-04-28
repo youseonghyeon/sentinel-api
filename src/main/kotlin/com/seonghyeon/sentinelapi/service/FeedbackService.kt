@@ -15,6 +15,7 @@ import java.time.ZoneOffset
 @Service
 class FeedbackService(
     private val feedbackRepository: FeedbackRepository,
+    private val slackNotifier: SlackNotifier,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -33,6 +34,7 @@ class FeedbackService(
             )
         )
         log.info("Feedback submitted: id={}, appId={}, kind={}", saved.id, appId, kind)
+        slackNotifier.notifyFeedback(saved)
         return saved
     }
 
