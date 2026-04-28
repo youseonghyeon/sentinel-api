@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/sentinel}
+    username: ${DB_USERNAME:sentinel}
+    password: ${DB_PASSWORD:sentinel}
+
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+
+server:
+  port: ${SERVER_PORT:8080}
+
+sentinel:
+  storage:
+    root: ${STORAGE_ROOT:data/apps}
+  slack:
+    webhook-url: ${SLACK_WEBHOOK_URL:}
+
+management:
+  server:
+    port: ${ACTUATOR_PORT:8081}
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %clr(%-5level) %clr([%X{traceId:-},%X{spanId:-}]){faint} %clr(%logger{36}){cyan} - %msg%n"

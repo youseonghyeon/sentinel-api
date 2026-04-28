@@ -41,3 +41,9 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+### SOPS ###
+# 복호화된 임시 파일은 절대 커밋하지 않음
+secrets/*.dec.yaml
+secrets/*.dec.env
+*.decrypted~

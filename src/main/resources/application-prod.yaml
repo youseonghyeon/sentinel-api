@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    properties:
+      hibernate:
+        format_sql: false
+    show-sql: false
+
+server:
+  port: ${SERVER_PORT:8080}
+
+sentinel:
+  storage:
+    root: ${STORAGE_ROOT:/data/apps}
+  slack:
+    webhook-url: ${SLACK_WEBHOOK_URL}
+
+management:
+  server:
+    port: ${ACTUATOR_PORT:8081}
+
+logging:
+  structured:
+    format:
+      console: ${LOG_FORMAT:ecs}

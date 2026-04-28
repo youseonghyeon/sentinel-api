@@ -29,6 +29,8 @@ service:
 
 secretName: sentinel-secret
 
+springProfile: prod
+
 livenessProbe:
   httpGet:
     path: /actuator/health/liveness

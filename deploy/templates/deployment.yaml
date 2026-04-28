@@ -51,11 +51,13 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.secretName }}
-          {{- if .Values.persistence.enabled }}
           env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.springProfile | quote }}
+            {{- if .Values.persistence.enabled }}
             - name: STORAGE_ROOT
               value: {{ .Values.persistence.storageRoot | quote }}
-          {{- end }}
+            {{- end }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
