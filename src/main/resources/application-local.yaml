@@ -27,4 +27,4 @@ management:
 
 logging:
   pattern:
-    console: "%d{HH:mm:ss.SSS} %clr(%-5level) %clr([%X{traceId:-},%X{spanId:-}]){faint} %clr(%logger{36}){cyan} - %msg%n"
+    console: "%d{HH:mm:ss.SSS} %clr(%-5level) %clr([%X{requestId:--}]){magenta} %clr(%X{method:--} %X{path:--}){faint} %clr(%logger{36}){cyan} - %msg%n%wEx"

@@ -148,7 +148,7 @@
         .empty { text-align: center; color: #94a3b8; padding: 56px 20px; background: #fff; border-radius: 14px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); border: 1px dashed #cbd5e1; font-size: 14px; }
         .empty svg { width: 40px; height: 40px; color: #cbd5e1; margin: 0 auto 12px; display: block; }
 
-        .footer { text-align: center; color: #94a3b8; font-size: 12px; margin-top: 32px; }
+        .footer { text-align: center; color: #94a3b8; font-size: 12px; max-width: 1080px; margin: 32px auto 24px; padding: 0 20px; }
 
         @media (max-width: 540px) {
             .hero { padding: 24px 22px 22px; }
@@ -248,8 +248,6 @@
                 </div>
             </div>
         </form>
-
-        <div class="footer">Powered by Coding Boss</div>
     </div>
 
     <aside class="feedback-panel" th:if="${app != null}">
@@ -270,6 +268,9 @@
         </form>
     </aside>
 </div>
+
+<div class="footer">Powered by Coding Boss</div>
+
 <script>
     function attachToken(form) {
         const token = document.getElementById('token').value.trim();
