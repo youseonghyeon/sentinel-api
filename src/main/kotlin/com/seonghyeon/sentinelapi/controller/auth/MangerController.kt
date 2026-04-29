@@ -77,9 +77,10 @@ class MangerController(
         @RequestParam appId: Long,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) expireDate: LocalDate,
         @RequestParam(defaultValue = "1") maxDeviceCount: Int,
+        @RequestParam(required = false) memo: String?,
         redirectAttributes: RedirectAttributes,
     ): String {
-        val token = tokenAuthService.generate(appId, expireDate, maxDeviceCount)
+        val token = tokenAuthService.generate(appId, expireDate, maxDeviceCount, memo)
         redirectAttributes.addFlashAttribute("newToken", token.tokenStr)
         redirectAttributes.addFlashAttribute("newAppName", token.application.name)
         redirectAttributes.addFlashAttribute("newExpireDate", token.expireDate)
@@ -131,8 +132,9 @@ class MangerController(
         @PathVariable id: Long,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) expireDate: LocalDate,
         @RequestParam maxDeviceCount: Int,
+        @RequestParam(required = false) memo: String?,
     ): String {
-        tokenAuthService.update(id, expireDate, maxDeviceCount)
+        tokenAuthService.update(id, expireDate, maxDeviceCount, memo)
         return "redirect:/dashboard/users"
     }
 
@@ -190,9 +192,14 @@ class MangerController(
     }
 
     @PostMapping("/dashboard/apps/{id}/delete")
-    fun deleteApp(@PathVariable id: Long): String {
-        applicationService.delete(id)
-        return "redirect:/dashboard/apps"
+    fun deleteApp(@PathVariable id: Long, redirectAttributes: RedirectAttributes): String {
+        return try {
+            applicationService.delete(id)
+            "redirect:/dashboard/apps"
+        } catch (e: SentinelException) {
+            redirectAttributes.addFlashAttribute("error", e.errorCode.message)
+            "redirect:/dashboard/apps"
+        }
     }
 
     // --- 애플리케이션 파일 ---

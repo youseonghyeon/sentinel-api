@@ -4,6 +4,7 @@ import com.seonghyeon.sentinelapi.common.exception.ErrorCode
 import com.seonghyeon.sentinelapi.common.exception.SentinelException
 import com.seonghyeon.sentinelapi.domain.App
 import com.seonghyeon.sentinelapi.repository.AppRepository
+import com.seonghyeon.sentinelapi.repository.TokenRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -13,6 +14,7 @@ import kotlin.random.Random
 class ApplicationService(
     private val appRepository: AppRepository,
     private val appFileService: AppFileService,
+    private val tokenRepository: TokenRepository,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -44,6 +46,10 @@ class ApplicationService(
     @Transactional
     fun delete(id: Long) {
         log.info("Deleting app: id={}", id)
+        if (tokenRepository.existsByApplication_Id(id)) {
+            log.warn("Cannot delete app with active tokens: id={}", id)
+            throw SentinelException(ErrorCode.APP_IN_USE)
+        }
         appFileService.deleteAllByApp(id)
         appRepository.deleteById(id)
     }

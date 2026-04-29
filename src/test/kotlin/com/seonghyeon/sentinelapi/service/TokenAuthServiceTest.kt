@@ -61,6 +61,42 @@ class TokenAuthServiceTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `generate - memo를 지정하면 저장된다`() {
+        val app = givenApp()
+
+        val token = tokenAuthService.generate(app.id, LocalDate.now().plusDays(30), memo = "VIP 고객용")
+
+        assertThat(token.memo).isEqualTo("VIP 고객용")
+    }
+
+    @Test
+    fun `generate - memo 미지정 시 null로 저장된다`() {
+        val app = givenApp()
+
+        val token = tokenAuthService.generate(app.id, LocalDate.now().plusDays(30))
+
+        assertThat(token.memo).isNull()
+    }
+
+    @Test
+    fun `generate - memo가 빈 문자열이면 null로 저장된다`() {
+        val app = givenApp()
+
+        val token = tokenAuthService.generate(app.id, LocalDate.now().plusDays(30), memo = "")
+
+        assertThat(token.memo).isNull()
+    }
+
+    @Test
+    fun `generate - memo가 공백 문자열이면 null로 저장된다`() {
+        val app = givenApp()
+
+        val token = tokenAuthService.generate(app.id, LocalDate.now().plusDays(30), memo = "   ")
+
+        assertThat(token.memo).isNull()
+    }
+
+    @Test
     fun `check - 유효한 토큰이면 토큰을 반환한다`() {
         val app = givenApp()
         val saved = tokenRepository.save(Token(id = 0, application = app, tokenStr = "svctoken", expireDate = LocalDate.now().plusDays(10)))
@@ -159,6 +195,64 @@ class TokenAuthServiceTest : AbstractIntegrationTest() {
     fun `update - 존재하지 않는 토큰이면 TOKEN_NOT_FOUND`() {
         val ex = assertThrows<SentinelException> { tokenAuthService.update(99999L, LocalDate.now().plusDays(10), 3) }
         assertThat(ex.errorCode).isEqualTo(ErrorCode.TOKEN_NOT_FOUND)
+    }
+
+    @Test
+    fun `update - memo를 지정하면 저장된다`() {
+        val app = givenApp()
+        val token = tokenAuthService.generate(app.id, LocalDate.now().plusDays(30))
+
+        tokenAuthService.update(token.id, token.expireDate, token.maxDeviceCount, memo = "수정된 메모")
+
+        val updated = tokenRepository.findById(token.id).orElseThrow()
+        assertThat(updated.memo).isEqualTo("수정된 메모")
+    }
+
+    @Test
+    fun `update - memo가 null이면 기존 memo를 유지한다`() {
+        val app = givenApp()
+        val token = tokenAuthService.generate(app.id, LocalDate.now().plusDays(30), memo = "기존 메모")
+
+        tokenAuthService.update(token.id, token.expireDate, token.maxDeviceCount, memo = null)
+
+        val updated = tokenRepository.findById(token.id).orElseThrow()
+        assertThat(updated.memo).isEqualTo("기존 메모")
+    }
+
+    @Test
+    fun `update - memo가 빈 문자열이면 기존 memo가 클리어된다`() {
+        val app = givenApp()
+        val token = tokenAuthService.generate(app.id, LocalDate.now().plusDays(30), memo = "기존 메모")
+
+        tokenAuthService.update(token.id, token.expireDate, token.maxDeviceCount, memo = "")
+
+        val updated = tokenRepository.findById(token.id).orElseThrow()
+        assertThat(updated.memo).isNull()
+    }
+
+    @Test
+    fun `update - memo가 공백 문자열이면 기존 memo가 클리어된다`() {
+        val app = givenApp()
+        val token = tokenAuthService.generate(app.id, LocalDate.now().plusDays(30), memo = "기존 메모")
+
+        tokenAuthService.update(token.id, token.expireDate, token.maxDeviceCount, memo = "   ")
+
+        val updated = tokenRepository.findById(token.id).orElseThrow()
+        assertThat(updated.memo).isNull()
+    }
+
+    @Test
+    fun `update - 만료일과 최대 PC 수와 memo를 한 번에 변경한다`() {
+        val app = givenApp()
+        val token = tokenAuthService.generate(app.id, LocalDate.now().plusDays(30), maxDeviceCount = 1, memo = "old")
+        val newDate = LocalDate.now().plusDays(60)
+
+        tokenAuthService.update(token.id, newDate, 7, memo = "new")
+
+        val updated = tokenRepository.findById(token.id).orElseThrow()
+        assertThat(updated.expireDate).isEqualTo(newDate)
+        assertThat(updated.maxDeviceCount).isEqualTo(7)
+        assertThat(updated.memo).isEqualTo("new")
     }
 
     // --- delete ---

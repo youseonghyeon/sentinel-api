@@ -14,4 +14,5 @@ interface TokenRepository : JpaRepository<Token, Long> {
     fun findByTokenStrContainingIgnoreCase(tokenStr: String, pageable: Pageable): Page<Token>
     fun findByApplication_Id(applicationId: Long, pageable: Pageable): Page<Token>
     fun findByApplication_IdAndTokenStrContainingIgnoreCase(applicationId: Long, tokenStr: String, pageable: Pageable): Page<Token>
+    fun existsByApplication_Id(applicationId: Long): Boolean
 }

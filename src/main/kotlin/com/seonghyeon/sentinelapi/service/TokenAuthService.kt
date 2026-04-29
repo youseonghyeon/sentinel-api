@@ -44,20 +44,30 @@ class TokenAuthService(
         else -> tokenRepository.findAllBy(pageable)
     }
 
-    fun update(id: Long, expireDate: LocalDate, maxDeviceCount: Int): Token {
+    fun update(id: Long, expireDate: LocalDate, maxDeviceCount: Int, memo: String? = null): Token {
         val token = tokenRepository.findById(id).orElseThrow { SentinelException(ErrorCode.TOKEN_NOT_FOUND) }
         token.expireDate = expireDate
         token.maxDeviceCount = maxDeviceCount
+        if (memo != null) token.memo = memo.takeIf { it.isNotBlank() }
         return tokenRepository.save(token)
     }
 
     fun delete(id: Long) = tokenRepository.deleteById(id)
 
-    fun generate(appId: Long, expireDate: LocalDate, maxDeviceCount: Int = 1): Token {
+    fun generate(appId: Long, expireDate: LocalDate, maxDeviceCount: Int = 1, memo: String? = null): Token {
         val app = appRepository.findById(appId)
             .orElseThrow { SentinelException(ErrorCode.INVALID_APPLICATION) }
         val tokenStr = UUID.randomUUID().toString().replace("-", "")
-        val token = tokenRepository.save(Token(id = 0, application = app, tokenStr = tokenStr, expireDate = expireDate, maxDeviceCount = maxDeviceCount))
+        val token = tokenRepository.save(
+            Token(
+                id = 0,
+                application = app,
+                tokenStr = tokenStr,
+                expireDate = expireDate,
+                maxDeviceCount = maxDeviceCount,
+                memo = memo?.takeIf { it.isNotBlank() },
+            )
+        )
         log.info("Token generated: tokenId={}, appId={}, expireDate={}, maxDeviceCount={}", token.id, appId, expireDate, maxDeviceCount)
         return token
     }

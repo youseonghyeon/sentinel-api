@@ -4,16 +4,20 @@ import com.seonghyeon.sentinelapi.AbstractIntegrationTest
 import com.seonghyeon.sentinelapi.common.exception.ErrorCode
 import com.seonghyeon.sentinelapi.common.exception.SentinelException
 import com.seonghyeon.sentinelapi.domain.App
+import com.seonghyeon.sentinelapi.domain.Token
 import com.seonghyeon.sentinelapi.repository.AppRepository
+import com.seonghyeon.sentinelapi.repository.TokenRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDate
 
 class ApplicationServiceTest : AbstractIntegrationTest() {
 
     @Autowired lateinit var applicationService: ApplicationService
     @Autowired lateinit var appRepository: AppRepository
+    @Autowired lateinit var tokenRepository: TokenRepository
 
     @Test
     fun `register - 앱을 생성하고 반환한다`() {
@@ -64,6 +68,76 @@ class ApplicationServiceTest : AbstractIntegrationTest() {
     @Test
     fun `delete - 앱을 삭제한다`() {
         val app = appRepository.save(App(id = 0, name = "ToDelete", description = "", appId = "app_del01"))
+
+        applicationService.delete(app.id)
+
+        assertThat(appRepository.findById(app.id)).isEmpty
+    }
+
+    @Test
+    fun `delete - 사용중인 토큰이 있으면 APP_IN_USE 예외를 던진다`() {
+        val app = appRepository.save(App(id = 0, name = "InUse", description = "", appId = "app_inuse01"))
+        tokenRepository.save(
+            Token(
+                id = 0,
+                application = app,
+                tokenStr = "in-use-token",
+                expireDate = LocalDate.now().plusDays(30),
+            )
+        )
+
+        val ex = assertThrows<SentinelException> { applicationService.delete(app.id) }
+
+        assertThat(ex.errorCode).isEqualTo(ErrorCode.APP_IN_USE)
+    }
+
+    @Test
+    fun `delete - 사용중인 토큰이 있으면 앱을 삭제하지 않는다`() {
+        val app = appRepository.save(App(id = 0, name = "InUse", description = "", appId = "app_inuse02"))
+        tokenRepository.save(
+            Token(
+                id = 0,
+                application = app,
+                tokenStr = "in-use-token-2",
+                expireDate = LocalDate.now().plusDays(30),
+            )
+        )
+
+        runCatching { applicationService.delete(app.id) }
+
+        assertThat(appRepository.findById(app.id)).isPresent
+    }
+
+    @Test
+    fun `delete - 만료된 토큰이라도 존재하면 APP_IN_USE 예외를 던진다`() {
+        val app = appRepository.save(App(id = 0, name = "ExpiredOnly", description = "", appId = "app_inuse03"))
+        tokenRepository.save(
+            Token(
+                id = 0,
+                application = app,
+                tokenStr = "expired-token",
+                expireDate = LocalDate.now().minusDays(1),
+            )
+        )
+
+        val ex = assertThrows<SentinelException> { applicationService.delete(app.id) }
+
+        assertThat(ex.errorCode).isEqualTo(ErrorCode.APP_IN_USE)
+    }
+
+    @Test
+    fun `delete - 토큰을 모두 제거한 후에는 정상 삭제된다`() {
+        val app = appRepository.save(App(id = 0, name = "Cleanup", description = "", appId = "app_inuse04"))
+        val token = tokenRepository.save(
+            Token(
+                id = 0,
+                application = app,
+                tokenStr = "soon-to-go",
+                expireDate = LocalDate.now().plusDays(30),
+            )
+        )
+        tokenRepository.deleteById(token.id)
+        tokenRepository.flush()
 
         applicationService.delete(app.id)
 

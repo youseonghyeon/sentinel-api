@@ -22,6 +22,7 @@ enum class ErrorCode(val status: HttpStatus, val message: String) {
     INVALID_API_KEY(HttpStatus.UNAUTHORIZED, "유효하지 않은 API 키입니다."),
     TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 토큰을 찾을 수 없습니다."),
     APP_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 애플리케이션을 찾을 수 없습니다."),
+    APP_IN_USE(HttpStatus.CONFLICT, "사용중인 사용자가 있습니다."),
 
     // Device
     DEVICE_ID_REQUIRED(HttpStatus.BAD_REQUEST, "PC 식별 정보가 필요합니다."),

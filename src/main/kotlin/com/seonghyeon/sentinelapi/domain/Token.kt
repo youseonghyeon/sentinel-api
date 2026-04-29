@@ -28,5 +28,8 @@ class Token(
     @Column(name = "max_device_count", nullable = false)
     var maxDeviceCount: Int = 1,
 
+    @Column(name = "memo")
+    var memo: String? = null,
+
 ) {
 }
