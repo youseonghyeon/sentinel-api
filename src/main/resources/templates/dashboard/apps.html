@@ -98,26 +98,5 @@
         </div>
     </div>
 </div>
-<script>
-    function toggleMenu(btn) {
-        const menu = btn.nextElementSibling;
-        const wasOpen = menu.classList.contains('open');
-        closeAllMenus();
-        if (!wasOpen) {
-            menu.classList.add('open');
-            btn.setAttribute('aria-expanded', 'true');
-        }
-    }
-    function closeAllMenus() {
-        document.querySelectorAll('.menu.open').forEach(m => m.classList.remove('open'));
-        document.querySelectorAll('.btn-more[aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
-    }
-    document.addEventListener('click', function (e) {
-        if (!e.target.closest('.menu-wrap')) closeAllMenus();
-    });
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeAllMenus();
-    });
-</script>
 </body>
 </html>
