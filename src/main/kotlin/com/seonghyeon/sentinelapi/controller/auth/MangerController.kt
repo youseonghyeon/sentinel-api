@@ -106,6 +106,24 @@ class MangerController(
         return "redirect:/dashboard/apikeys?success=manager"
     }
 
+    @PostMapping("/dashboard/managers/{id}/password")
+    fun changeManagerPassword(
+        @PathVariable id: Long,
+        @RequestParam currentPassword: String,
+        @RequestParam newPassword: String,
+        @RequestParam newPasswordConfirmation: String,
+        redirectAttributes: RedirectAttributes,
+    ): String {
+        return try {
+            managerService.changePassword(id, currentPassword, newPassword, newPasswordConfirmation)
+            "redirect:/dashboard/apikeys?success=password"
+        } catch (e: SentinelException) {
+            redirectAttributes.addFlashAttribute("passwordChangeError", e.errorCode.message)
+            redirectAttributes.addFlashAttribute("passwordChangeManagerId", id)
+            "redirect:/dashboard/apikeys"
+        }
+    }
+
     // --- 사용자 관리 ---
 
     @GetMapping("/dashboard/users")

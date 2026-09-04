@@ -1,12 +1,25 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head th:replace="~{fragments/layout :: head}"></head>
+<style>
+    .alert-success { background:#dcfce7; color:#166534; padding:12px 16px; border-radius:6px; margin-bottom:16px; }
+    .alert-error { background:#fef2f2; color:#b91c1c; padding:12px 16px; border:1px solid #fecaca; border-radius:6px; margin-bottom:16px; }
+    .password-change { min-width:190px; }
+    .password-change summary { color:#2563eb; cursor:pointer; font-size:13px; user-select:none; }
+    .password-change[open] summary { margin-bottom:12px; }
+    .password-change-form { display:grid; gap:10px; min-width:240px; }
+    .password-change-form input { width:100%; min-width:0; }
+    .password-change-form button { justify-self:start; }
+    #manager-table td { vertical-align:top; }
+</style>
 <body>
 <div th:replace="~{fragments/layout :: sidebar('apikeys')}"></div>
 <div class="main">
     <div class="page-title">매니저 관리</div>
 
-    <div th:if="${#strings.equals(param.success, 'manager')}" style="background:#dcfce7;color:#166534;padding:12px 16px;border-radius:6px;margin-bottom:16px;">매니저가 등록되었습니다.</div>
+    <div th:if="${#strings.equals(param.success, 'manager')}" class="alert-success">매니저가 등록되었습니다.</div>
+    <div th:if="${#strings.equals(param.success, 'password')}" class="alert-success">비밀번호가 변경되었습니다.</div>
+    <div th:if="${passwordChangeError}" class="alert-error" th:text="${passwordChangeError}"></div>
     <div th:if="${#strings.equals(param.success, 'apikey')}" style="background:#fef9c3;color:#854d0e;padding:12px 16px;border-radius:6px;margin-bottom:16px;">
         API 키가 생성되었습니다. 이 키는 다시 확인할 수 없으니 복사해두세요.<br>
         <strong style="font-family:var(--font-mono);font-size:15px;" th:text="${param.key}"></strong>
@@ -31,18 +44,38 @@
 
     <div class="card">
         <h2>등록된 매니저</h2>
-        <table>
+        <table id="manager-table">
             <thead>
-                <tr><th>ID</th><th>아이디 (마스킹)</th><th>생성일시 (KST)</th></tr>
+                <tr><th>ID</th><th>아이디 (마스킹)</th><th>생성일시 (KST)</th><th>비밀번호 관리</th></tr>
             </thead>
             <tbody>
                 <tr th:each="m : ${managers}">
                     <td th:text="${m.id}"></td>
                     <td style="font-family:var(--font-mono);" th:text="${m.username}"></td>
                     <td th:text="${#temporals.format(m.createdAtKst, 'yyyy-MM-dd HH:mm')}"></td>
+                    <td>
+                        <details class="password-change" th:open="${passwordChangeManagerId == m.id}">
+                            <summary>비밀번호 변경</summary>
+                            <form class="password-change-form" th:action="@{/dashboard/managers/{id}/password(id=${m.id})}" method="post">
+                                <div>
+                                    <label th:for="${'currentPassword-' + m.id}">현재 비밀번호</label>
+                                    <input type="password" th:id="${'currentPassword-' + m.id}" name="currentPassword" autocomplete="current-password" required>
+                                </div>
+                                <div>
+                                    <label th:for="${'newPassword-' + m.id}">새 비밀번호</label>
+                                    <input type="password" th:id="${'newPassword-' + m.id}" name="newPassword" autocomplete="new-password" required>
+                                </div>
+                                <div>
+                                    <label th:for="${'newPasswordConfirmation-' + m.id}">새 비밀번호 확인</label>
+                                    <input type="password" th:id="${'newPasswordConfirmation-' + m.id}" name="newPasswordConfirmation" autocomplete="new-password" required>
+                                </div>
+                                <button type="submit">변경하기</button>
+                            </form>
+                        </details>
+                    </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(managers)}">
-                    <td colspan="3" style="text-align:center;color:#94a3b8;padding:16px;">등록된 매니저가 없습니다.</td>
+                    <td colspan="4" style="text-align:center;color:#94a3b8;padding:16px;">등록된 매니저가 없습니다.</td>
                 </tr>
             </tbody>
         </table>

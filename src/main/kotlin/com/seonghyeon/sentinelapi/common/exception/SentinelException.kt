@@ -19,6 +19,9 @@ enum class ErrorCode(val status: HttpStatus, val message: String) {
 
     // Manager
     MANAGER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
+    INVALID_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "현재 비밀번호가 올바르지 않습니다."),
+    INVALID_NEW_PASSWORD(HttpStatus.BAD_REQUEST, "새 비밀번호를 입력해 주세요."),
+    PASSWORD_CONFIRMATION_MISMATCH(HttpStatus.BAD_REQUEST, "새 비밀번호와 새 비밀번호 확인이 일치하지 않습니다."),
     INVALID_API_KEY(HttpStatus.UNAUTHORIZED, "유효하지 않은 API 키입니다."),
     TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 토큰을 찾을 수 없습니다."),
     APP_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 애플리케이션을 찾을 수 없습니다."),
