@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
@@ -43,4 +44,28 @@ class ManagerService(
     }
 
     fun findAll(): List<Manager> = managerRepository.findAll()
+
+    @Transactional
+    fun changePassword(
+        managerId: Long,
+        currentPassword: String,
+        newPassword: String,
+        newPasswordConfirmation: String,
+    ) {
+        val manager = managerRepository.findById(managerId)
+            .orElseThrow { SentinelException(ErrorCode.MANAGER_NOT_FOUND) }
+
+        if (!passwordEncoder.matches(currentPassword, manager.password)) {
+            throw SentinelException(ErrorCode.INVALID_CURRENT_PASSWORD)
+        }
+        if (newPassword.isBlank()) {
+            throw SentinelException(ErrorCode.INVALID_NEW_PASSWORD)
+        }
+        if (newPassword != newPasswordConfirmation) {
+            throw SentinelException(ErrorCode.PASSWORD_CONFIRMATION_MISMATCH)
+        }
+
+        manager.password = passwordEncoder.encode(newPassword)!!
+        log.info("Manager password changed: id={}", manager.id)
+    }
 }

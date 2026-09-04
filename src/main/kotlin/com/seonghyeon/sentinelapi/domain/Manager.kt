@@ -15,7 +15,7 @@ class Manager(
     val username: String,
 
     @Column(name = "password", nullable = false)
-    val password: String,
+    var password: String,
 
     @Column(name = "created_at", nullable = false)
     val createdAt: LocalDateTime,
