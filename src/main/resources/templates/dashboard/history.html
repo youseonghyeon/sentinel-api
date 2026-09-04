@@ -2,8 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head th:replace="~{fragments/layout :: head}"></head>
 <style>
-    .search-form { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; margin-bottom:16px; }
-    .search-form input { min-width:200px; }
+    .search-form { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; align-items:end; margin-bottom:16px; }
+    .search-form input { width:100%; min-width:0; }
+    .search-actions { display:flex; gap:8px; align-items:center; }
+    .search-error { grid-column:1 / -1; color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; border-radius:4px; padding:10px 12px; font-size:13px; }
     .btn-reset { padding:11px 16px; background:#f1f5f9; color:#475569; border:1px solid #ddd; border-radius:4px; font-size:14px; cursor:pointer; text-decoration:none; line-height:1; display:inline-flex; align-items:center; }
     .btn-reset:hover { background:#e2e8f0; }
     .pagination { display:flex; gap:8px; align-items:center; justify-content:center; margin-top:20px; }
@@ -20,11 +22,11 @@
     <!-- 차트 영역 -->
     <div style="display:flex; gap:24px; margin-bottom:24px; max-width:1200px;">
         <div class="card" style="flex:1; min-width:0;">
-            <h2>서비스별 접근 횟수</h2>
+            <h2>서비스별 접근 횟수 (검색 조건 적용)</h2>
             <canvas id="appChart" height="200"></canvas>
         </div>
         <div class="card" style="flex:2; min-width:0;">
-            <h2>날짜별 접근 수</h2>
+            <h2>날짜별 접근 수 (최근 1개월 · 검색 조건 적용)</h2>
             <canvas id="dailyChart" height="200"></canvas>
         </div>
     </div>
@@ -41,8 +43,27 @@
                 <label>토큰</label>
                 <input type="text" name="tokenStr" th:value="${tokenStr}" placeholder="토큰 검색"/>
             </div>
-            <button type="submit">검색</button>
-            <a th:href="@{/dashboard/history}" class="btn-reset">초기화</a>
+            <div>
+                <label>IP</label>
+                <input type="text" name="ip" th:value="${ip}" placeholder="정확한 IP 입력"/>
+            </div>
+            <div>
+                <label>기기 ID</label>
+                <input type="text" name="deviceId" th:value="${deviceId}" placeholder="정확한 기기 ID 입력"/>
+            </div>
+            <div>
+                <label>시작일 (KST)</label>
+                <input type="date" name="fromDate" th:value="${fromDate}" th:max="${toDate}"/>
+            </div>
+            <div>
+                <label>종료일 (KST)</label>
+                <input type="date" name="toDate" th:value="${toDate}" th:min="${fromDate}"/>
+            </div>
+            <div class="search-actions">
+                <button type="submit">검색</button>
+                <a th:href="@{/dashboard/history}" class="btn-reset">초기화</a>
+            </div>
+            <div th:if="${dateRangeError}" class="search-error">시작일은 종료일보다 늦을 수 없습니다.</div>
         </form>
 
         <table>
@@ -53,6 +74,7 @@
                     <th>애플리케이션</th>
                     <th>토큰</th>
                     <th>IP</th>
+                    <th>기기 ID</th>
                 </tr>
             </thead>
             <tbody>
@@ -62,9 +84,10 @@
                     <td th:text="${appNames[h.appId] ?: h.appId}"></td>
                     <td th:text="${h.token}"></td>
                     <td th:text="${h.ip}"></td>
+                    <td th:text="${h.deviceId ?: '-'}"></td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(histories)}">
-                    <td colspan="5" style="text-align:center; color:#94a3b8; padding:24px;">히스토리가 없습니다.</td>
+                    <td colspan="6" style="text-align:center; color:#94a3b8; padding:24px;">히스토리가 없습니다.</td>
                 </tr>
             </tbody>
         </table>
@@ -72,18 +95,27 @@
         <!-- 페이지네이션 -->
         <div class="pagination" th:if="${totalPages > 1}">
             <a th:if="${currentPage > 0}"
-               th:href="@{/dashboard/history(page=${currentPage - 1}, appName=${appName}, tokenStr=${tokenStr})}">이전</a>
+               th:href="@{/dashboard/history(page=${currentPage - 1}, appName=${appName}, tokenStr=${tokenStr}, ip=${ip}, deviceId=${deviceId}, fromDate=${fromDate}, toDate=${toDate})}">이전</a>
             <span th:if="${currentPage == 0}" class="disabled">이전</span>
 
-            <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+            <a th:if="${paginationStart > 0}"
+               th:href="@{/dashboard/history(page=0, appName=${appName}, tokenStr=${tokenStr}, ip=${ip}, deviceId=${deviceId}, fromDate=${fromDate}, toDate=${toDate})}">1</a>
+            <span th:if="${paginationStart > 1}" class="disabled">…</span>
+
+            <th:block th:each="i : ${#numbers.sequence(paginationStart, paginationEnd)}">
                 <span th:if="${i == currentPage}" class="current" th:text="${i + 1}"></span>
                 <a th:unless="${i == currentPage}"
-                   th:href="@{/dashboard/history(page=${i}, appName=${appName}, tokenStr=${tokenStr})}"
+                   th:href="@{/dashboard/history(page=${i}, appName=${appName}, tokenStr=${tokenStr}, ip=${ip}, deviceId=${deviceId}, fromDate=${fromDate}, toDate=${toDate})}"
                    th:text="${i + 1}"></a>
             </th:block>
 
+            <span th:if="${paginationEnd < totalPages - 2}" class="disabled">…</span>
+            <a th:if="${paginationEnd < totalPages - 1}"
+               th:href="@{/dashboard/history(page=${totalPages - 1}, appName=${appName}, tokenStr=${tokenStr}, ip=${ip}, deviceId=${deviceId}, fromDate=${fromDate}, toDate=${toDate})}"
+               th:text="${totalPages}"></a>
+
             <a th:if="${currentPage < totalPages - 1}"
-               th:href="@{/dashboard/history(page=${currentPage + 1}, appName=${appName}, tokenStr=${tokenStr})}">다음</a>
+               th:href="@{/dashboard/history(page=${currentPage + 1}, appName=${appName}, tokenStr=${tokenStr}, ip=${ip}, deviceId=${deviceId}, fromDate=${fromDate}, toDate=${toDate})}">다음</a>
             <span th:if="${currentPage >= totalPages - 1}" class="disabled">다음</span>
         </div>
     </div>
