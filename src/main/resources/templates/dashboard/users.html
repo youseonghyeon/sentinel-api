@@ -110,6 +110,7 @@
                             <button type="button" onclick="addMonths(1)">+1달</button>
                             <button type="button" onclick="addMonths(2)">+2달</button>
                             <button type="button" onclick="addMonths(3)">+3달</button>
+                            <button type="button" onclick="setUnlimitedExpireDate()" title="9999년 12월 31일로 설정">무제한</button>
                         </div>
                     </div>
                 </div>
@@ -332,6 +333,10 @@
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
         document.getElementById('expireDate').value = `${yyyy}-${mm}-${dd}`;
+    }
+
+    function setUnlimitedExpireDate() {
+        document.getElementById('expireDate').value = '9999-12-31';
     }
 
     let toastTimer = null;
