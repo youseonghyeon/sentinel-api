@@ -2,10 +2,11 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head th:replace="~{fragments/layout :: head}"></head>
 <style>
-    .filter-row { display: flex; gap: 8px; margin-bottom: 16px; }
-    .filter-row a { padding: 8px 14px; border-radius: 999px; text-decoration: none; font-size: 13px; color: #475569; background: #f1f5f9; border: 1px solid #e2e8f0; }
-    .filter-row a.active { background: #1e293b; color: #fff; border-color: #1e293b; }
-    .fb-card { background: #fff; border-radius: 10px; border: 1px solid #e2e8f0; padding: 16px 18px; margin-bottom: 12px; }
+    .filter-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .filter-row a { padding: 8px 14px; border-radius: 999px; text-decoration: none; font-size: 13px; font-weight: 650; color: var(--color-text-muted); background: var(--color-surface); border: 1px solid var(--color-border); }
+    .filter-row a:hover { color: var(--color-primary); border-color: #bfdbfe; background: var(--color-primary-soft); }
+    .filter-row a.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+    .fb-card { background: var(--color-surface); border-radius: var(--radius-md); border: 1px solid var(--color-border); padding: 18px 20px; margin-bottom: 12px; box-shadow: var(--shadow-sm); }
     .fb-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
     .fb-kind { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; letter-spacing: 0.04em; }
     .fb-kind.bug { background: #fee2e2; color: #991b1b; }
@@ -14,28 +15,31 @@
     .fb-status.open { background: #fef3c7; color: #92400e; }
     .fb-status.resolved { background: #dcfce7; color: #166534; }
     .fb-meta { color: #64748b; font-size: 12px; }
-    .fb-message { color: #0f172a; white-space: pre-wrap; word-break: break-word; line-height: 1.55; font-size: 14px; padding: 8px 0; }
+    .fb-message { color: var(--color-text); white-space: pre-wrap; word-break: break-word; line-height: 1.6; font-size: 14px; padding: 10px 0; }
     .fb-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
     .fb-contact { font-family: var(--font-mono); font-size: 12px; color: #475569; }
     .fb-actions { display: flex; gap: 8px; }
     .fb-actions form { display: inline; }
-    .fb-actions button { padding: 6px 12px; border-radius: 6px; border: 1px solid #e2e8f0; background: #fff; font-size: 12px; cursor: pointer; color: #334155; font-family: inherit; }
+    .fb-actions button { min-height: 34px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: var(--color-surface); font-size: 12px; cursor: pointer; color: var(--color-text-soft); font-family: inherit; box-shadow: none; }
     .fb-actions button:hover { background: #f8fafc; }
     .fb-actions button.primary { background: #16a34a; color: #fff; border-color: #16a34a; }
     .fb-actions button.primary:hover { background: #15803d; }
     .fb-actions button.danger { color: #dc2626; }
     .fb-actions button.danger:hover { background: #fef2f2; }
-    .empty-state { text-align: center; color: #94a3b8; padding: 56px 16px; background: #fff; border: 1px dashed #cbd5e1; border-radius: 10px; }
-    .pager { display: flex; gap: 6px; justify-content: center; margin-top: 16px; }
-    .pager a, .pager span { padding: 6px 12px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 13px; color: #475569; text-decoration: none; }
-    .pager a.active, .pager span.active { background: #1e293b; color: #fff; border-color: #1e293b; }
+    .empty-state { text-align: center; color: #94a3b8; padding: 56px 16px; background: var(--color-surface); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); }
 </style>
-<body>
+<body class="dashboard-page">
 <div th:replace="~{fragments/layout :: sidebar('feedbacks')}"></div>
-<div class="main">
-    <div class="page-title">오류 / 개선 요청</div>
+<div class="main" id="main-content">
+    <header class="page-header">
+        <div class="page-heading">
+            <p class="page-eyebrow">Support Inbox</p>
+            <h1 class="page-title">오류 및 개선 요청</h1>
+            <p class="page-description">접수된 피드백을 상태별로 확인하고 처리 이력을 관리합니다.</p>
+        </div>
+    </header>
 
-    <div class="filter-row">
+    <div class="filter-row" aria-label="처리 상태 필터">
         <a th:href="@{/dashboard/feedbacks}" th:classappend="${statusFilter == ''} ? ' active'">전체</a>
         <a th:href="@{/dashboard/feedbacks(status='OPEN')}" th:classappend="${statusFilter == 'OPEN'} ? ' active'">미처리</a>
         <a th:href="@{/dashboard/feedbacks(status='RESOLVED')}" th:classappend="${statusFilter == 'RESOLVED'} ? ' active'">처리됨</a>

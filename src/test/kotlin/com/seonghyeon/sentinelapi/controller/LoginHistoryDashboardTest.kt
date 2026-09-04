@@ -120,7 +120,8 @@ class LoginHistoryDashboardTest : AbstractIntegrationTest() {
                     mapOf("2026-08-05" to 1, "2026-09-04" to 1),
                 )
             )
-            .andExpect(content().string(containsString("날짜별 접근 수 (최근 1개월 · 검색 조건 적용)")))
+            .andExpect(content().string(containsString("날짜별 접근 수")))
+            .andExpect(content().string(containsString("검색 조건을 적용한 최근 1개월의 일별 추이입니다.")))
     }
 
     private fun givenApp(name: String, appId: String): App =
