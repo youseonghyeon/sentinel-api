@@ -10,6 +10,7 @@ import com.seonghyeon.sentinelapi.service.ApplicationService
 import com.seonghyeon.sentinelapi.service.DeviceService
 import com.seonghyeon.sentinelapi.service.FeedbackService
 import com.seonghyeon.sentinelapi.service.LoginHistoryService
+import com.seonghyeon.sentinelapi.service.LoginHistorySearchCondition
 import com.seonghyeon.sentinelapi.service.ManagerService
 import com.seonghyeon.sentinelapi.service.TokenAuthService
 import org.springframework.data.domain.PageRequest
@@ -256,13 +257,30 @@ class MangerController(
     fun historyPage(
         @RequestParam(required = false) appName: String?,
         @RequestParam(required = false) tokenStr: String?,
+        @RequestParam(required = false) ip: String?,
+        @RequestParam(required = false) deviceId: String?,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) fromDate: LocalDate?,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) toDate: LocalDate?,
         @RequestParam(defaultValue = "0") page: Int,
         model: Model,
     ): String {
         val kst = ZoneId.of("Asia/Seoul")
         val utc = ZoneId.of("UTC")
-        val pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"))
-        val historyPage = loginHistoryService.search(appName, tokenStr, pageable)
+        val dateRangeError = fromDate != null && toDate != null && fromDate.isAfter(toDate)
+        val searchCondition = LoginHistorySearchCondition(
+            appName = appName,
+            token = tokenStr,
+            ip = ip,
+            deviceId = deviceId,
+            fromInclusive = fromDate?.atStartOfDay(kst)?.withZoneSameInstant(utc)?.toLocalDateTime(),
+            toExclusive = toDate?.plusDays(1)?.atStartOfDay(kst)?.withZoneSameInstant(utc)?.toLocalDateTime(),
+        )
+        val sort = Sort.by(Sort.Direction.DESC, "createdAt")
+        val requestedPage = page.coerceAtLeast(0)
+        var historyPage = loginHistoryService.search(searchCondition, PageRequest.of(requestedPage, 20, sort))
+        if (historyPage.totalPages > 0 && requestedPage >= historyPage.totalPages) {
+            historyPage = loginHistoryService.search(searchCondition, PageRequest.of(historyPage.totalPages - 1, 20, sort))
+        }
 
         val appNames = applicationService.findAllAsNameMap()
 
@@ -272,17 +290,23 @@ class MangerController(
                 token = h.token,
                 appId = h.appId,
                 ip = h.ip,
+                deviceId = h.deviceId,
                 createdAtKst = h.createdAt.atZone(utc).withZoneSameInstant(kst).toLocalDateTime(),
             )
         }
 
-        // 차트용 전체 데이터 (검색 필터 미적용)
-        val allHistories = loginHistoryService.findAll()
+        val allHistories = loginHistoryService.findAll(searchCondition)
         val appAccessCounts = allHistories
             .groupBy { appNames[it.appId] ?: it.appId }
             .mapValues { it.value.size }
             .toSortedMap()
+        val dailyChartToDate = toDate ?: LocalDate.now(kst)
+        val dailyChartFromDate = dailyChartToDate.minusMonths(1).plusDays(1)
         val dailyCounts = allHistories
+            .filter {
+                val createdDateKst = it.createdAt.atZone(utc).withZoneSameInstant(kst).toLocalDate()
+                !createdDateKst.isBefore(dailyChartFromDate) && !createdDateKst.isAfter(dailyChartToDate)
+            }
             .groupBy { it.createdAt.atZone(utc).withZoneSameInstant(kst).toLocalDate().toString() }
             .mapValues { it.value.size }
             .toSortedMap()
@@ -291,10 +315,22 @@ class MangerController(
         model.addAttribute("appNames", appNames)
         model.addAttribute("appAccessCounts", appAccessCounts)
         model.addAttribute("dailyCounts", dailyCounts)
+        model.addAttribute("dailyChartFromDate", dailyChartFromDate)
+        model.addAttribute("dailyChartToDate", dailyChartToDate)
         model.addAttribute("appName", appName.orEmpty())
         model.addAttribute("tokenStr", tokenStr.orEmpty())
+        model.addAttribute("ip", ip.orEmpty())
+        model.addAttribute("deviceId", deviceId.orEmpty())
+        model.addAttribute("fromDate", fromDate)
+        model.addAttribute("toDate", toDate)
+        model.addAttribute("dateRangeError", dateRangeError)
         model.addAttribute("currentPage", historyViews.number)
         model.addAttribute("totalPages", historyViews.totalPages)
+        val paginationStartCandidate = (historyViews.number - 2).coerceAtLeast(0)
+        val paginationEnd = (paginationStartCandidate + 4).coerceAtMost(historyViews.totalPages - 1)
+        val paginationStart = (paginationEnd - 4).coerceAtLeast(0)
+        model.addAttribute("paginationStart", paginationStart)
+        model.addAttribute("paginationEnd", paginationEnd)
         return "dashboard/history"
     }
 

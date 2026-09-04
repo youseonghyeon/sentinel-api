@@ -24,9 +24,15 @@ class LoginHistoryServiceTest : AbstractIntegrationTest() {
     private fun givenApp(name: String, appId: String): App =
         appRepository.save(App(id = 0, name = name, description = "", appId = appId))
 
-    private fun givenHistory(appId: String, token: String, ip: String = "127.0.0.1"): LoginHistory =
+    private fun givenHistory(
+        appId: String,
+        token: String,
+        ip: String = "127.0.0.1",
+        deviceId: String? = null,
+        createdAt: LocalDateTime = LocalDateTime.now(ZoneOffset.UTC),
+    ): LoginHistory =
         loginHistoryRepository.save(
-            LoginHistory(id = 0, token = token, appId = appId, ip = ip, deviceId = null, createdAt = LocalDateTime.now(ZoneOffset.UTC))
+            LoginHistory(id = 0, token = token, appId = appId, ip = ip, deviceId = deviceId, createdAt = createdAt)
         )
 
     // --- save ---
@@ -98,6 +104,45 @@ class LoginHistoryServiceTest : AbstractIntegrationTest() {
 
         assertThat(page.content).hasSize(1)
         assertThat(page.content[0].appId).isEqualTo(app1.appId)
+    }
+
+    @Test
+    fun `search - IP와 기기 ID와 기간을 동시에 적용한다`() {
+        val app = givenApp("DetailedSearchApp", "app_srch_detail")
+        givenHistory(
+            appId = app.appId,
+            token = "matching-history",
+            ip = "203.0.113.10",
+            deviceId = "device-target",
+            createdAt = LocalDateTime.of(2026, 9, 4, 3, 0),
+        )
+        givenHistory(
+            appId = app.appId,
+            token = "wrong-device",
+            ip = "203.0.113.10",
+            deviceId = "device-other",
+            createdAt = LocalDateTime.of(2026, 9, 4, 3, 0),
+        )
+        givenHistory(
+            appId = app.appId,
+            token = "outside-period",
+            ip = "203.0.113.10",
+            deviceId = "device-target",
+            createdAt = LocalDateTime.of(2026, 9, 5, 3, 0),
+        )
+
+        val page = loginHistoryService.search(
+            LoginHistorySearchCondition(
+                appName = "DetailedSearch",
+                ip = "203.0.113.10",
+                deviceId = "device-target",
+                fromInclusive = LocalDateTime.of(2026, 9, 4, 0, 0),
+                toExclusive = LocalDateTime.of(2026, 9, 5, 0, 0),
+            ),
+            pageableDesc,
+        )
+
+        assertThat(page.content.map { it.token }).containsExactly("matching-history")
     }
 
     @Test

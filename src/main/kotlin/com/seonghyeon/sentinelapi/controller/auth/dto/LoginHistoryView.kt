@@ -7,5 +7,6 @@ data class LoginHistoryView(
     val token: String,
     val appId: String,
     val ip: String,
+    val deviceId: String?,
     val createdAtKst: LocalDateTime,
 )
