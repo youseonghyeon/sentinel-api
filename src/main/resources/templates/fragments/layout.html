@@ -3,11 +3,8 @@
 <head th:fragment="head">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#f6f8fa">
     <title>Sentinel Admin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/app.css}">
     <script th:src="@{/js/app.js}" defer></script>
 </head>
@@ -19,7 +16,7 @@
         <span class="brand-mark" aria-hidden="true">S</span>
         <div class="brand-copy">
             <span class="brand-title">Sentinel</span>
-            <span class="brand-subtitle">Admin Console</span>
+            <span class="brand-subtitle">관리자 콘솔</span>
         </div>
         <button class="sidebar-toggle" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="sidebar-navigation">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -29,7 +26,7 @@
     </div>
 
     <nav id="sidebar-navigation" class="sidebar-nav">
-        <p class="nav-label">Workspace</p>
+        <p class="nav-label">관리</p>
         <a th:href="@{/dashboard/apps}" th:classappend="${activePage == 'apps'} ? ' active'">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                 <rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>
@@ -56,7 +53,7 @@
             <span th:if="${openFeedbackCount != null and openFeedbackCount > 0}" class="nav-badge" th:text="${openFeedbackCount}"></span>
         </a>
 
-        <p class="nav-label">System</p>
+        <p class="nav-label">시스템</p>
         <a th:href="@{/dashboard/apikeys}" th:classappend="${activePage == 'apikeys'} ? ' active'">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                 <circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>

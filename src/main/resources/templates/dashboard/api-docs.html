@@ -2,18 +2,18 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head th:replace="~{fragments/layout :: head}"></head>
 <style>
-    .docs-header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; padding: 28px 32px; border-radius: 14px; margin-bottom: 24px; }
-    .docs-header h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: #fff; }
-    .docs-header p { color: #cbd5e1; font-size: 14px; line-height: 1.6; }
-    .docs-header .base-url { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,0.08); font-family: var(--font-mono); font-size: 12px; color: #e2e8f0; margin-top: 12px; border: 1px solid rgba(255,255,255,0.12); }
+    .docs-header { background: var(--color-surface); color: var(--color-text); padding: 20px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin-bottom: 20px; }
+    .docs-header h2 { font-size: 18px; font-weight: 650; margin-bottom: 6px; color: var(--color-text); }
+    .docs-header p { color: var(--color-text-muted); font-size: 13px; line-height: 1.5; }
+    .docs-header .base-url { display: inline-flex; align-items: center; gap: 8px; padding: 5px 9px; border-radius: var(--radius-sm); background: var(--color-surface-subtle); font-family: var(--font-mono); font-size: 12px; color: var(--color-text-soft); margin-top: 12px; border: 1px solid var(--color-border); }
 
     .group-title { font-size: 13px; font-weight: 700; color: #64748b; letter-spacing: 0.08em; text-transform: uppercase; margin: 20px 4px 10px; }
 
-    .endpoint { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 10px; overflow: hidden; transition: box-shadow .15s ease; }
-    .endpoint[open] { box-shadow: 0 8px 24px -10px rgba(15, 23, 42, 0.14); }
+    .endpoint { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-sm); margin-bottom: 8px; overflow: hidden; }
+    .endpoint[open] { border-color: var(--color-border-strong); }
     .endpoint > summary { list-style: none; display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; user-select: none; }
     .endpoint > summary::-webkit-details-marker { display: none; }
-    .endpoint > summary:hover { background: #f8fafc; }
+    .endpoint > summary:hover { background: var(--color-surface-subtle); }
     .endpoint[open] > summary { border-bottom: 1px solid #e2e8f0; }
 
     .method { display: inline-flex; align-items: center; justify-content: center; min-width: 64px; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #fff; letter-spacing: 0.04em; font-family: var(--font-mono); }
@@ -74,7 +74,6 @@
 <div class="main" id="main-content">
     <header class="page-header">
         <div class="page-heading">
-            <p class="page-eyebrow">Developer</p>
             <h1 class="page-title">API 명세</h1>
             <p class="page-description">Sentinel 연동에 필요한 인증 방식, 요청 형식과 응답 계약을 확인합니다.</p>
         </div>

@@ -14,7 +14,6 @@
 <div class="main" id="main-content">
     <header class="page-header">
         <div class="page-heading">
-            <p class="page-eyebrow">Analytics</p>
             <h1 class="page-title">접근 히스토리</h1>
             <p class="page-description">서비스별 접근 흐름을 확인하고 기간, IP, 기기 단위로 이력을 추적합니다.</p>
         </div>
@@ -138,7 +137,7 @@
     const dailyLabels = /*[[${dailyCounts.keySet()}]]*/ [];
     const dailyData   = /*[[${dailyCounts.values()}]]*/ [];
 
-    const COLORS = ['#2563eb','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#db2777'];
+    const COLORS = ['#0969da','#57606a','#1a7f37','#9a6700','#8250df','#6e7781','#bf8700'];
 
     new Chart(document.getElementById('appChart'), {
         type: 'doughnut',
@@ -163,7 +162,7 @@
             datasets: [{
                 label: '접근 수',
                 data: dailyData,
-                backgroundColor: '#2563eb',
+                backgroundColor: '#57606a',
                 borderRadius: 4,
             }]
         },
