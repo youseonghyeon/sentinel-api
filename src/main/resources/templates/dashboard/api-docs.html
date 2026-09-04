@@ -2,18 +2,18 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head th:replace="~{fragments/layout :: head}"></head>
 <style>
-    .docs-header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; padding: 28px 32px; border-radius: 14px; margin-bottom: 24px; }
-    .docs-header h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: #fff; }
-    .docs-header p { color: #cbd5e1; font-size: 14px; line-height: 1.6; }
-    .docs-header .base-url { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,0.08); font-family: var(--font-mono); font-size: 12px; color: #e2e8f0; margin-top: 12px; border: 1px solid rgba(255,255,255,0.12); }
+    .docs-header { background: var(--color-surface); color: var(--color-text); padding: 20px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin-bottom: 20px; }
+    .docs-header h2 { font-size: 18px; font-weight: 650; margin-bottom: 6px; color: var(--color-text); }
+    .docs-header p { color: var(--color-text-muted); font-size: 13px; line-height: 1.5; }
+    .docs-header .base-url { display: inline-flex; align-items: center; gap: 8px; padding: 5px 9px; border-radius: var(--radius-sm); background: var(--color-surface-subtle); font-family: var(--font-mono); font-size: 12px; color: var(--color-text-soft); margin-top: 12px; border: 1px solid var(--color-border); }
 
     .group-title { font-size: 13px; font-weight: 700; color: #64748b; letter-spacing: 0.08em; text-transform: uppercase; margin: 20px 4px 10px; }
 
-    .endpoint { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 10px; overflow: hidden; transition: box-shadow .15s ease; }
-    .endpoint[open] { box-shadow: 0 8px 24px -10px rgba(15, 23, 42, 0.14); }
+    .endpoint { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-sm); margin-bottom: 8px; overflow: hidden; }
+    .endpoint[open] { border-color: var(--color-border-strong); }
     .endpoint > summary { list-style: none; display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; user-select: none; }
     .endpoint > summary::-webkit-details-marker { display: none; }
-    .endpoint > summary:hover { background: #f8fafc; }
+    .endpoint > summary:hover { background: var(--color-surface-subtle); }
     .endpoint[open] > summary { border-bottom: 1px solid #e2e8f0; }
 
     .method { display: inline-flex; align-items: center; justify-content: center; min-width: 64px; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #fff; letter-spacing: 0.04em; font-family: var(--font-mono); }
@@ -69,17 +69,22 @@
         .summary-text { margin-left: 0; width: 100%; text-align: left; padding-top: 4px; }
     }
 </style>
-<body>
+<body class="dashboard-page">
 <div th:replace="~{fragments/layout :: sidebar('api-docs')}"></div>
-<div class="main">
-    <div class="page-title">API 명세</div>
+<div class="main" id="main-content">
+    <header class="page-header">
+        <div class="page-heading">
+            <h1 class="page-title">API 명세</h1>
+            <p class="page-description">Sentinel 연동에 필요한 인증 방식, 요청 형식과 응답 계약을 확인합니다.</p>
+        </div>
+    </header>
 
     <div class="docs-header">
         <h2>Sentinel Auth API</h2>
         <p>외부 클라이언트가 토큰 인증, 기기 관리, 버전 확인, 파일 다운로드를 수행하는 REST API입니다.<br>
            모든 응답은 JSON이며 (다운로드 제외), 에러는 공통 형식으로 반환됩니다.</p>
         <div class="base-url">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
             Base URL: /api/v1/auth
         </div>
     </div>
@@ -96,7 +101,7 @@
             <span class="method method-post">POST</span>
             <span class="path">/api/v1/auth/login/token</span>
             <span class="summary-text">토큰 로그인 + 기기 등록 + 이력 기록</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">토큰 유효성 검사와 함께 기기를 등록하고 LoginHistory에 요청을 기록합니다. 클라이언트 프로그램 최초 실행 시 호출합니다.</p>
@@ -141,7 +146,7 @@
             <span class="method method-post">POST</span>
             <span class="path">/api/v1/auth/check/token</span>
             <span class="summary-text">토큰/기기 유효성 주기 확인 (이력 미기록)</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">프로그램 구동 중 주기적으로 호출하여 토큰/기기 상태를 확인합니다. LoginHistory에 기록하지 않으며, 등록된 기기의 <code>lastSeenAt</code>만 갱신합니다.<br>
@@ -186,7 +191,7 @@
             <span class="method method-get">GET</span>
             <span class="path">/api/v1/auth/devices</span>
             <span class="summary-text">내 토큰에 등록된 기기 목록</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">토큰에 연결된 모든 기기의 목록을 반환합니다.</p>
@@ -226,7 +231,7 @@
             <span class="method method-delete">DELETE</span>
             <span class="path">/api/v1/auth/devices/{deviceId}</span>
             <span class="summary-text">특정 기기 로그아웃</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">토큰에 등록된 특정 기기를 제거합니다. 해당 기기에서 실행 중인 클라이언트는 다음 <code>/check/token</code> 호출 시 <code>DEVICE_LOGGED_OUT</code>을 받습니다.</p>
@@ -258,7 +263,7 @@
             <span class="method method-delete">DELETE</span>
             <span class="path">/api/v1/auth/logout</span>
             <span class="summary-text">현재 기기 로그아웃</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">호출한 기기(X-Device-Id)를 등록 해제합니다. 클라이언트가 자발적 종료 시 사용합니다.</p>
@@ -290,7 +295,7 @@
             <span class="method method-get">GET</span>
             <span class="path">/api/v1/auth/version</span>
             <span class="summary-text">최신 버전 메타 조회</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">등록된 최신 파일의 메타 정보(버전, 파일명, 크기, 체크섬 등)를 반환합니다. 클라이언트는 이 값을 설치된 버전과 비교하여 업데이트 여부를 판단할 수 있습니다.</p>
@@ -329,7 +334,7 @@
             <span class="method method-get">GET</span>
             <span class="path">/api/v1/auth/version/{version}</span>
             <span class="summary-text">특정 버전 메타 조회</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">버전 문자열로 특정 파일의 메타를 조회합니다.</p>
@@ -356,7 +361,7 @@
             <span class="method method-get">GET</span>
             <span class="path">/api/v1/auth/download</span>
             <span class="summary-text">최신 파일 다운로드 (스트리밍)</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">등록된 최신 파일을 <code>application/octet-stream</code>으로 스트리밍합니다. 응답 헤더로 버전과 체크섬을 같이 전달하니 다운로드 후 검증에 사용하세요.</p>
@@ -384,7 +389,7 @@
             <span class="method method-get">GET</span>
             <span class="path">/api/v1/auth/download/{version}</span>
             <span class="summary-text">특정 버전 파일 다운로드</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">버전을 지정하여 해당 파일을 다운로드합니다. 응답 헤더는 /download와 동일.</p>
@@ -410,7 +415,7 @@
             <span class="method method-post">POST</span>
             <span class="path">/api/v1/manager/users</span>
             <span class="summary-text">토큰 자동 생성 (운영자용)</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">지정한 앱(<code>appId</code>)에 대해 만료일을 가진 토큰을 자동 생성하여 반환합니다. 토큰 문자열은 서버가 생성하므로 직접 입력할 수 없습니다.</p>
@@ -478,7 +483,7 @@
             <span class="method method-get">GET</span>
             <span class="path">/api/v1/manager/users</span>
             <span class="summary-text">토큰 목록 (검색 / 페이징)</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">등록된 토큰 목록을 페이지 단위로 반환합니다. <code>appId</code>로 앱 필터링, <code>q</code>로 토큰 문자열 부분 검색이 가능합니다.</p>
@@ -532,7 +537,7 @@
             <span class="method method-get">GET</span>
             <span class="path">/api/v1/manager/users/{tokenId}</span>
             <span class="summary-text">토큰 단건 조회</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">토큰 ID 로 단일 토큰 정보를 조회합니다.</p>
@@ -558,7 +563,7 @@
             <span class="method method-patch">PATCH</span>
             <span class="path">/api/v1/manager/users/{tokenId}</span>
             <span class="summary-text">토큰 만료일 / 최대 PC 수 수정</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc"><code>expireDate</code>와 <code>maxDeviceCount</code>를 부분 갱신합니다. 누락된 필드는 기존 값을 유지합니다.</p>
@@ -594,7 +599,7 @@
             <span class="method method-delete">DELETE</span>
             <span class="path">/api/v1/manager/users/{tokenId}</span>
             <span class="summary-text">토큰 폐기</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">토큰을 삭제합니다. 연결된 <code>DeviceRegistration</code>은 외래키 제약에 따라 함께 처리되므로, 필요 시 먼저 기기 목록을 정리하세요.</p>
@@ -614,7 +619,7 @@
             <span class="method method-get">GET</span>
             <span class="path">/api/v1/manager/users/{tokenId}/devices</span>
             <span class="summary-text">토큰에 등록된 기기 목록</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">토큰에 연결된 모든 기기를 반환합니다. 시간은 UTC <code>LocalDateTime</code> 입니다.</p>
@@ -640,7 +645,7 @@
             <span class="method method-delete">DELETE</span>
             <span class="path">/api/v1/manager/users/{tokenId}/devices/{deviceId}</span>
             <span class="summary-text">특정 기기 강제 로그아웃</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">지정한 기기를 <code>DeviceRegistration</code>에서 제거합니다. 이후 해당 기기로 <code>/check/token</code> 호출 시 <code>DEVICE_LOGGED_OUT</code>이 반환됩니다.</p>
@@ -659,7 +664,7 @@
             <span class="method method-get">GET</span>
             <span class="path">/api/v1/manager/apps</span>
             <span class="summary-text">앱 목록</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <h4>Responses</h4>
@@ -682,7 +687,7 @@
             <span class="method method-post">POST</span>
             <span class="path">/api/v1/manager/apps</span>
             <span class="summary-text">앱 등록 (appId 자동 생성)</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">새 앱을 등록합니다. <code>appId</code>는 서버가 자동 생성합니다.</p>
@@ -718,7 +723,7 @@
             <span class="method method-delete">DELETE</span>
             <span class="path">/api/v1/manager/apps/{id}</span>
             <span class="summary-text">앱 삭제 (연결된 파일 함께 제거)</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc">앱을 삭제합니다. 해당 앱의 업로드 파일(<code>AppFile</code>)도 함께 정리됩니다.</p>
@@ -738,7 +743,7 @@
             <span class="method method-get">GET</span>
             <span class="path">/api/v1/manager/login-histories</span>
             <span class="summary-text">로그인 이력 조회 (검색 / 페이징)</span>
-            <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="chev"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
         </summary>
         <div class="endpoint-body">
             <p class="desc"><code>LoginHistory</code> 를 시간 역순으로 페이징 조회합니다. <code>createdAt</code> 은 UTC 입니다.</p>

@@ -2,40 +2,45 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head th:replace="~{fragments/layout :: head}"></head>
 <style>
-    .alert-success { background:#dcfce7; color:#166534; padding:12px 16px; border-radius:6px; margin-bottom:16px; }
-    .alert-error { background:#fef2f2; color:#b91c1c; padding:12px 16px; border:1px solid #fecaca; border-radius:6px; margin-bottom:16px; }
     .password-change { min-width:190px; }
-    .password-change summary { color:#2563eb; cursor:pointer; font-size:13px; user-select:none; }
+    .password-change summary { color:var(--color-primary); cursor:pointer; font-size:13px; font-weight:650; user-select:none; }
     .password-change[open] summary { margin-bottom:12px; }
     .password-change-form { display:grid; gap:10px; min-width:240px; }
     .password-change-form input { width:100%; min-width:0; }
     .password-change-form button { justify-self:start; }
     #manager-table td { vertical-align:top; }
 </style>
-<body>
+<body class="dashboard-page">
 <div th:replace="~{fragments/layout :: sidebar('apikeys')}"></div>
-<div class="main">
-    <div class="page-title">매니저 관리</div>
+<div class="main" id="main-content">
+    <header class="page-header">
+        <div class="page-heading">
+            <h1 class="page-title">매니저 및 API 키</h1>
+            <p class="page-description">관리자 계정의 비밀번호와 자동화에 사용하는 API 키를 안전하게 관리합니다.</p>
+        </div>
+    </header>
 
-    <div th:if="${#strings.equals(param.success, 'manager')}" class="alert-success">매니저가 등록되었습니다.</div>
-    <div th:if="${#strings.equals(param.success, 'password')}" class="alert-success">비밀번호가 변경되었습니다.</div>
-    <div th:if="${passwordChangeError}" class="alert-error" th:text="${passwordChangeError}"></div>
-    <div th:if="${#strings.equals(param.success, 'apikey')}" style="background:#fef9c3;color:#854d0e;padding:12px 16px;border-radius:6px;margin-bottom:16px;">
+    <div th:if="${#strings.equals(param.success, 'manager')}" class="alert-success" role="status" aria-live="polite">매니저가 등록되었습니다.</div>
+    <div th:if="${#strings.equals(param.success, 'password')}" class="alert-success" role="status" aria-live="polite">비밀번호가 변경되었습니다.</div>
+    <div th:if="${passwordChangeError}" class="alert-error" role="alert" th:text="${passwordChangeError}"></div>
+    <div th:if="${#strings.equals(param.success, 'apikey')}" class="alert-warning" role="status" aria-live="polite">
         API 키가 생성되었습니다. 이 키는 다시 확인할 수 없으니 복사해두세요.<br>
         <strong style="font-family:var(--font-mono);font-size:15px;" th:text="${param.key}"></strong>
     </div>
 
     <div class="card">
-        <h2>매니저 등록</h2>
+        <div class="section-heading">
+            <div><h2>매니저 등록</h2><p class="section-description">관리자 콘솔에 접근할 새 계정을 생성합니다.</p></div>
+        </div>
         <form th:action="@{/dashboard/register/manager}" method="post">
             <div class="form-row">
                 <div>
                     <label for="username">아이디</label>
-                    <input type="text" id="username" name="username" required style="min-width:160px;">
+                    <input type="text" id="username" name="username" autocomplete="username" spellcheck="false" required style="min-width:160px;">
                 </div>
                 <div>
                     <label for="password">비밀번호</label>
-                    <input type="password" id="password" name="password" required style="min-width:160px;">
+                    <input type="password" id="password" name="password" autocomplete="new-password" required style="min-width:160px;">
                 </div>
                 <button type="submit">매니저 등록</button>
             </div>
@@ -43,7 +48,10 @@
     </div>
 
     <div class="card">
-        <h2>등록된 매니저</h2>
+        <div class="section-heading">
+            <div><h2>등록된 매니저</h2><p class="section-description">계정 생성일과 비밀번호 관리 작업을 확인합니다.</p></div>
+        </div>
+        <div class="table-wrap">
         <table id="manager-table">
             <thead>
                 <tr><th>ID</th><th>아이디 (마스킹)</th><th>생성일시 (KST)</th><th>비밀번호 관리</th></tr>
@@ -79,19 +87,23 @@
                 </tr>
             </tbody>
         </table>
+        </div>
     </div>
 
     <div class="card">
-        <h2>매니저용 API Key 관리</h2>
+        <div class="section-heading">
+            <div><h2>매니저용 API 키</h2><p class="section-description">자동화 요청에 사용할 키를 발급하고 폐기합니다.</p></div>
+        </div>
         <form th:action="@{/dashboard/register/apikey}" method="post" style="margin-bottom:16px;">
             <div class="form-row">
                 <div>
                     <label for="apiKeyDesc">설명</label>
-                    <input type="text" id="apiKeyDesc" name="description" placeholder="예) 자동화 스크립트" required style="min-width:240px;">
+                    <input type="text" id="apiKeyDesc" name="description" placeholder="예: 배포 자동화 스크립트…" autocomplete="off" required style="min-width:240px;">
                 </div>
                 <button type="submit">키 생성</button>
             </div>
         </form>
+        <div class="table-wrap">
         <table>
             <thead>
                 <tr><th>ID</th><th>설명</th><th>생성일시</th><th>관리</th></tr>
@@ -104,7 +116,7 @@
                     <td>
                         <form th:action="@{/dashboard/apikeys/{id}/delete(id=${key.id})}" method="post" style="display:inline;"
                               onsubmit="return confirm('삭제하시겠습니까?')">
-                            <button type="submit" style="padding:4px 10px;background:#ef4444;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer;">삭제</button>
+                            <button type="submit" class="btn-delete">삭제</button>
                         </form>
                     </td>
                 </tr>
@@ -113,6 +125,7 @@
                 </tr>
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 </body>

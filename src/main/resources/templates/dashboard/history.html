@@ -5,67 +5,75 @@
     .search-form { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; align-items:end; margin-bottom:16px; }
     .search-form input { width:100%; min-width:0; }
     .search-actions { display:flex; gap:8px; align-items:center; }
-    .search-error { grid-column:1 / -1; color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; border-radius:4px; padding:10px 12px; font-size:13px; }
-    .btn-reset { padding:11px 16px; background:#f1f5f9; color:#475569; border:1px solid #ddd; border-radius:4px; font-size:14px; cursor:pointer; text-decoration:none; line-height:1; display:inline-flex; align-items:center; }
-    .btn-reset:hover { background:#e2e8f0; }
-    .pagination { display:flex; gap:8px; align-items:center; justify-content:center; margin-top:20px; }
-    .pagination a, .pagination span { padding:6px 12px; border:1px solid #ddd; border-radius:4px; font-size:13px; text-decoration:none; color:#475569; }
-    .pagination a:hover { background:#f1f5f9; }
-    .pagination .current { background:#2563eb; color:#fff; border-color:#2563eb; }
-    .pagination .disabled { color:#cbd5e1; pointer-events:none; }
+    .search-error { grid-column:1 / -1; color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; border-radius:var(--radius-sm); padding:10px 12px; font-size:13px; }
+    .history-charts { margin-bottom:20px; }
+    .history-charts .card { margin-bottom:0; }
 </style>
-<body>
+<body class="dashboard-page">
 <div th:replace="~{fragments/layout :: sidebar('history')}"></div>
-<div class="main">
-    <div class="page-title">사용자 히스토리</div>
+<div class="main" id="main-content">
+    <header class="page-header">
+        <div class="page-heading">
+            <h1 class="page-title">접근 히스토리</h1>
+            <p class="page-description">서비스별 접근 흐름을 확인하고 기간, IP, 기기 단위로 이력을 추적합니다.</p>
+        </div>
+    </header>
 
     <!-- 차트 영역 -->
-    <div style="display:flex; gap:24px; margin-bottom:24px; max-width:1200px;">
-        <div class="card" style="flex:1; min-width:0;">
-            <h2>서비스별 접근 횟수 (검색 조건 적용)</h2>
+    <div class="dashboard-grid history-charts">
+        <div class="card span-4">
+            <div class="section-heading">
+                <div><h2>서비스별 접근 횟수</h2><p class="section-description">현재 검색 조건을 기준으로 집계합니다.</p></div>
+            </div>
             <canvas id="appChart" height="200"></canvas>
         </div>
-        <div class="card" style="flex:2; min-width:0;">
-            <h2>날짜별 접근 수 (최근 1개월 · 검색 조건 적용)</h2>
+        <div class="card span-8">
+            <div class="section-heading">
+                <div><h2>날짜별 접근 수</h2><p class="section-description">검색 조건을 적용한 최근 1개월의 일별 추이입니다.</p></div>
+            </div>
             <canvas id="dailyChart" height="200"></canvas>
         </div>
     </div>
 
     <!-- 목록 -->
     <div class="card">
+        <div class="section-heading">
+            <div><h2>접근 기록</h2><p class="section-description">KST 기준 접속 시간과 클라이언트 식별 정보를 조회합니다.</p></div>
+        </div>
         <!-- 검색 폼 -->
         <form method="get" th:action="@{/dashboard/history}" class="search-form">
             <div>
-                <label>애플리케이션</label>
-                <input type="text" name="appName" th:value="${appName}" placeholder="앱 이름 검색"/>
+                <label for="historyAppName">애플리케이션</label>
+                <input type="text" id="historyAppName" name="appName" th:value="${appName}" placeholder="앱 이름 검색…" autocomplete="off"/>
             </div>
             <div>
-                <label>토큰</label>
-                <input type="text" name="tokenStr" th:value="${tokenStr}" placeholder="토큰 검색"/>
+                <label for="historyToken">토큰</label>
+                <input type="text" id="historyToken" name="tokenStr" th:value="${tokenStr}" placeholder="토큰 검색…" autocomplete="off" spellcheck="false"/>
             </div>
             <div>
-                <label>IP</label>
-                <input type="text" name="ip" th:value="${ip}" placeholder="정확한 IP 입력"/>
+                <label for="historyIp">IP</label>
+                <input type="text" id="historyIp" name="ip" th:value="${ip}" placeholder="정확한 IP 입력…" autocomplete="off" spellcheck="false"/>
             </div>
             <div>
-                <label>기기 ID</label>
-                <input type="text" name="deviceId" th:value="${deviceId}" placeholder="정확한 기기 ID 입력"/>
+                <label for="historyDeviceId">기기 ID</label>
+                <input type="text" id="historyDeviceId" name="deviceId" th:value="${deviceId}" placeholder="정확한 기기 ID 입력…" autocomplete="off" spellcheck="false"/>
             </div>
             <div>
-                <label>시작일 (KST)</label>
-                <input type="date" name="fromDate" th:value="${fromDate}" th:max="${toDate}"/>
+                <label for="historyFromDate">시작일 (KST)</label>
+                <input type="date" id="historyFromDate" name="fromDate" th:value="${fromDate}" th:max="${toDate}" autocomplete="off"/>
             </div>
             <div>
-                <label>종료일 (KST)</label>
-                <input type="date" name="toDate" th:value="${toDate}" th:min="${fromDate}"/>
+                <label for="historyToDate">종료일 (KST)</label>
+                <input type="date" id="historyToDate" name="toDate" th:value="${toDate}" th:min="${fromDate}" autocomplete="off"/>
             </div>
             <div class="search-actions">
                 <button type="submit">검색</button>
                 <a th:href="@{/dashboard/history}" class="btn-reset">초기화</a>
             </div>
-            <div th:if="${dateRangeError}" class="search-error">시작일은 종료일보다 늦을 수 없습니다.</div>
+            <div th:if="${dateRangeError}" class="search-error" role="alert">시작일은 종료일보다 늦을 수 없습니다. 날짜 범위를 다시 확인해 주세요.</div>
         </form>
 
+        <div class="table-wrap">
         <table>
             <thead>
                 <tr>
@@ -91,6 +99,7 @@
                 </tr>
             </tbody>
         </table>
+        </div>
 
         <!-- 페이지네이션 -->
         <div class="pagination" th:if="${totalPages > 1}">
@@ -128,7 +137,7 @@
     const dailyLabels = /*[[${dailyCounts.keySet()}]]*/ [];
     const dailyData   = /*[[${dailyCounts.values()}]]*/ [];
 
-    const COLORS = ['#2563eb','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#db2777'];
+    const COLORS = ['#0969da','#57606a','#1a7f37','#9a6700','#8250df','#6e7781','#bf8700'];
 
     new Chart(document.getElementById('appChart'), {
         type: 'doughnut',
@@ -153,7 +162,7 @@
             datasets: [{
                 label: '접근 수',
                 data: dailyData,
-                backgroundColor: '#2563eb',
+                backgroundColor: '#57606a',
                 borderRadius: 4,
             }]
         },

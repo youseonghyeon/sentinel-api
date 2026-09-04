@@ -23,32 +23,34 @@
     .upload-form textarea { max-width: 640px; }
     .upload-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
 </style>
-<body>
+<body class="dashboard-page">
 <div th:replace="~{fragments/layout :: sidebar('apps')}"></div>
-<div class="main">
-    <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px;">
-        <a th:href="@{/dashboard/apps}" class="btn-back">← 목록</a>
-        <div class="page-title" style="margin:0;">
-            파일 관리 · <span th:text="${app.name}"></span>
-            <span class="mono" style="font-size:13px; margin-left:8px;" th:text="${app.appId}"></span>
+<div class="main" id="main-content">
+    <header class="page-header">
+        <div class="page-heading">
+            <h1 class="page-title">파일 관리 · <span th:text="${app.name}"></span></h1>
+            <p class="page-description">새 버전을 업로드하고 현재 배포 파일과 무결성 정보를 관리합니다. <span class="mono" th:text="${app.appId}"></span></p>
         </div>
-    </div>
+        <div class="page-actions"><a th:href="@{/dashboard/apps}" class="btn-back">← 애플리케이션</a></div>
+    </header>
 
-    <div th:if="${param.success == 'upload'}" style="background:#dcfce7;color:#166534;padding:12px 16px;border-radius:6px;margin-bottom:16px;">파일이 업로드되었습니다.</div>
-    <div th:if="${param.success == 'latest'}" style="background:#dcfce7;color:#166534;padding:12px 16px;border-radius:6px;margin-bottom:16px;">최신 버전이 변경되었습니다.</div>
-    <div th:if="${param.success == 'delete'}" style="background:#fef9c3;color:#854d0e;padding:12px 16px;border-radius:6px;margin-bottom:16px;">파일이 삭제되었습니다.</div>
-    <div th:if="${error}" style="background:#fee2e2;color:#991b1b;padding:12px 16px;border-radius:6px;margin-bottom:16px;" th:text="${error}"></div>
+    <div th:if="${param.success == 'upload'}" class="alert-success" role="status" aria-live="polite">파일이 업로드되었습니다.</div>
+    <div th:if="${param.success == 'latest'}" class="alert-success" role="status" aria-live="polite">최신 버전이 변경되었습니다.</div>
+    <div th:if="${param.success == 'delete'}" class="alert-warning" role="status" aria-live="polite">파일이 삭제되었습니다.</div>
+    <div th:if="${error}" class="alert-error" role="alert" th:text="${error}"></div>
 
     <div class="card">
-        <h2>새 버전 업로드</h2>
+        <div class="section-heading">
+            <div><h2>새 버전 업로드</h2><p class="section-description">버전 정보와 변경 내역을 파일과 함께 등록합니다.</p></div>
+        </div>
         <form class="upload-form" th:action="@{/dashboard/apps/{id}/files(id=${app.id})}" method="post" enctype="multipart/form-data">
             <div class="field">
                 <label for="version">버전</label>
-                <input type="text" id="version" name="version" placeholder="예: 1.0.0" required style="min-width:200px;">
+                <input type="text" id="version" name="version" placeholder="예: 1.0.0…" autocomplete="off" spellcheck="false" required style="min-width:200px;">
             </div>
             <div class="field">
                 <label for="changelog">변경 내역 (선택)</label>
-                <textarea id="changelog" name="changelog" placeholder="이번 버전의 변경사항을 적어주세요."></textarea>
+                <textarea id="changelog" name="changelog" placeholder="이번 버전의 변경사항을 입력하세요…" autocomplete="off"></textarea>
             </div>
             <div class="field">
                 <label for="file">파일</label>
@@ -61,7 +63,10 @@
     </div>
 
     <div class="card">
-        <h2>버전 목록</h2>
+        <div class="section-heading">
+            <div><h2>버전 목록</h2><p class="section-description">파일 크기와 SHA-256 해시를 포함한 배포 이력입니다.</p></div>
+        </div>
+        <div class="table-wrap">
         <table>
             <thead>
                 <tr>
@@ -100,6 +105,7 @@
                 </tr>
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 <script>

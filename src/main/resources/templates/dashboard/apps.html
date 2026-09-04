@@ -5,25 +5,32 @@
     .version-cell { font-family: var(--font-mono); font-size: 13px; color: #334155; }
     .version-cell.none { color: #cbd5e1; font-family: inherit; }
 </style>
-<body>
+<body class="dashboard-page">
 <div th:replace="~{fragments/layout :: sidebar('apps')}"></div>
-<div class="main">
-    <div class="page-title">애플리케이션 관리</div>
+<div class="main" id="main-content">
+    <header class="page-header">
+        <div class="page-heading">
+            <h1 class="page-title">애플리케이션</h1>
+            <p class="page-description">배포 애플리케이션과 현재 버전, 다운로드 진입점을 한곳에서 관리합니다.</p>
+        </div>
+    </header>
 
-    <div th:if="${#strings.equals(param.success, 'app')}" style="background:#dcfce7;color:#166534;padding:12px 16px;border-radius:6px;margin-bottom:16px;">애플리케이션이 등록되었습니다.</div>
-    <div th:if="${error}" th:text="${error}" style="background:#fee2e2;color:#991b1b;padding:12px 16px;border-radius:6px;margin-bottom:16px;"></div>
+    <div th:if="${#strings.equals(param.success, 'app')}" class="alert-success" role="status" aria-live="polite">애플리케이션이 등록되었습니다.</div>
+    <div th:if="${error}" th:text="${error}" class="alert-error" role="alert"></div>
 
     <div class="card">
-        <h2>애플리케이션 등록</h2>
+        <div class="section-heading">
+            <div><h2>애플리케이션 등록</h2><p class="section-description">새로운 클라이언트 애플리케이션을 Sentinel에 연결합니다.</p></div>
+        </div>
         <form th:action="@{/dashboard/register/app}" method="post">
             <div class="form-row">
                 <div>
                     <label for="appName">앱 이름</label>
-                    <input type="text" id="appName" name="name" required style="min-width:180px;">
+                    <input type="text" id="appName" name="name" required autocomplete="off" spellcheck="false" style="min-width:180px;">
                 </div>
                 <div>
                     <label for="appDescription">설명</label>
-                    <input type="text" id="appDescription" name="description" placeholder="선택 입력" style="min-width:220px;">
+                    <input type="text" id="appDescription" name="description" placeholder="예: 사내 운영 도구…" autocomplete="off" style="min-width:220px;">
                 </div>
                 <button type="submit">앱 등록</button>
             </div>
@@ -31,6 +38,10 @@
     </div>
 
     <div class="card">
+        <div class="section-heading">
+            <div><h2>등록된 애플리케이션</h2><p class="section-description">현재 버전과 파일 관리 상태를 확인합니다.</p></div>
+        </div>
+        <div class="table-wrap">
         <table>
             <thead>
                 <tr>
@@ -55,23 +66,23 @@
                     </td>
                     <td>
                         <div class="menu-wrap">
-                            <button type="button" class="btn-more" onclick="toggleMenu(this)" aria-label="더보기">
-                                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                            <button type="button" class="btn-more" onclick="toggleMenu(this)" aria-label="애플리케이션 관리 메뉴" aria-expanded="false">
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                             </button>
-                            <div class="menu" role="menu">
+                            <div class="menu">
                                 <a th:href="@{/dashboard/apps/{id}/files(id=${app.id})}" class="menu-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                     파일 관리
                                 </a>
                                 <a th:href="@{/download/{appId}(appId=${app.appId})}" target="_blank" class="menu-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                                     다운로드 페이지
                                 </a>
                                 <div class="menu-divider"></div>
                                 <form th:action="@{/dashboard/apps/{id}/delete(id=${app.id})}" method="post" class="menu-form"
                                       onsubmit="return confirm('삭제하시겠습니까? 연결된 토큰도 함께 삭제됩니다.')">
                                     <button type="submit" class="menu-item danger">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
                                         삭제
                                     </button>
                                 </form>
@@ -84,24 +95,8 @@
                 </tr>
             </tbody>
         </table>
+        </div>
     </div>
 </div>
-<script>
-    function toggleMenu(btn) {
-        const menu = btn.nextElementSibling;
-        const wasOpen = menu.classList.contains('open');
-        closeAllMenus();
-        if (!wasOpen) menu.classList.add('open');
-    }
-    function closeAllMenus() {
-        document.querySelectorAll('.menu.open').forEach(m => m.classList.remove('open'));
-    }
-    document.addEventListener('click', function (e) {
-        if (!e.target.closest('.menu-wrap')) closeAllMenus();
-    });
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeAllMenus();
-    });
-</script>
 </body>
 </html>
